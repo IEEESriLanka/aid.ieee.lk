@@ -37,7 +37,7 @@ export const TransactionTable: React.FC<Props> = ({ transactions }) => {
 
   return (
     <div id="transparency" className="py-12 bg-gray-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
         <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
           <div>
             <h2 className="text-2xl font-bold text-gray-900">Financial Ledger</h2>

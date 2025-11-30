@@ -25,7 +25,7 @@ export const ExpenseBreakdown: React.FC<Props> = ({ transactions }) => {
 
   if (expenseData.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64 text-gray-400">
+      <div className="flex justify-center items-center h-64 text-gray-400 reveal">
         No expense data available yet.
       </div>
     );
@@ -47,7 +47,7 @@ export const ExpenseBreakdown: React.FC<Props> = ({ transactions }) => {
 
   return (
     <div id="breakdown" className="py-12 bg-white">
-       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
           <h2 className="text-2xl font-bold text-gray-900 mb-8">Utilization Breakdown</h2>
           
           {/* Increased gap from gap-4/md:gap-8 to gap-8/lg:gap-16 to fix clutter */}

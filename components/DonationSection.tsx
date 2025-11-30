@@ -21,7 +21,7 @@ export const DonationSection: React.FC = () => {
         <div className="flex flex-col lg:flex-row gap-16 items-center">
           
           {/* Left Column: Appeal Text */}
-          <div className="flex-1 space-y-8">
+          <div className="flex-1 space-y-8 reveal">
             <div className="inline-flex items-center bg-red-500/10 border border-red-500/20 rounded-full px-4 py-1.5 text-sm font-bold text-red-400 mb-2 shadow-[0_0_15px_rgba(239,68,68,0.2)]">
               <span className="relative flex h-2 w-2 mr-3">
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
@@ -69,7 +69,7 @@ export const DonationSection: React.FC = () => {
           </div>
 
           {/* Right Column: Bank Card */}
-          <div className="w-full lg:w-[480px]">
+          <div className="w-full lg:w-[480px] reveal delay-200">
             <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative group">
                {/* Shine effect */}
                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
@@ -129,7 +129,7 @@ export const DonationSection: React.FC = () => {
                    </div>
                    
                    <p className="text-gray-300 mb-3">
-                     In the "Remarks" or "Reference" field of your bank transfer, use the following format exactly:
+                     In the "Remarks" or "Reference" field of your bank/online-payment transfer, use the following format exactly:
                    </p>
                    
                    <div className="bg-black/40 border border-white/10 rounded px-3 py-2 text-center mb-3">
@@ -142,7 +142,7 @@ export const DonationSection: React.FC = () => {
 
                    <div className="flex gap-2 items-start text-xs text-gray-300">
                       <Check className="w-4 h-4 text-green-400 flex-shrink-0" />
-                      <p>After transferring, please use the form below to upload your proof using the same <span className="font-mono text-white">DRF &lt;Your Name&gt;</span> code.</p>
+                      <p>After making the transfer, please come back to this form and fill in the fields below — including the same <span className="font-mono text-white">DRF &lt;Your Name&gt;</span> code — and upload the receipt or payment confirmation as proof of donation.</p>
                    </div>
                 </div>
 

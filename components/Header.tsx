@@ -5,7 +5,7 @@ export const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+    <header className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm transition-all duration-300">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-20">
           <div className="flex items-center gap-4">
@@ -99,26 +99,26 @@ export const Hero: React.FC = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10">
-        <div className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-[#00629B] ring-1 ring-inset ring-blue-700/10 mb-6">
+        <div className="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-xs font-medium text-[#00629B] ring-1 ring-inset ring-blue-700/10 mb-6 reveal">
           <span className="flex h-2 w-2 relative mr-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00629B]"></span>
           </span>
           Live Transparency Report
         </div>
-        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-6xl mb-6">
+        <h1 className="text-4xl font-extrabold tracking-tight text-gray-900 sm:text-6xl mb-6 reveal delay-100">
           Rebuilding with <span className="text-[#00629B]">Integrity</span>
         </h1>
-        <p className="text-lg text-gray-600 leading-relaxed mb-10 max-w-2xl mx-auto">
+        <p className="text-lg text-gray-600 leading-relaxed mb-10 max-w-2xl mx-auto reveal delay-200">
           In response to Cyclone Ditwah, IEEE Sri Lanka Section is dedicated to full financial transparency. 
           Every donation is tracked, every expense is verified, and every outcome is reported here.
         </p>
-        <div className="flex flex-col sm:flex-row justify-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-center gap-4 reveal delay-300">
            <a href="#donate" className="inline-flex items-center justify-center px-8 py-3.5 border border-transparent text-base font-semibold rounded-lg text-white bg-[#00629B] hover:bg-[#004e7a] transition-all shadow-lg hover:shadow-xl hover:-translate-y-0.5">
              Make a Donation
              <Heart className="w-4 h-4 ml-2 fill-current" />
            </a>
-           <a href="#transparency" className="inline-flex items-center justify-center px-8 py-3.5 border border-gray-200 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm">
+           <a href="#transparency" className="inline-flex items-center justify-center px-8 py-3.5 border border-gray-200 text-base font-medium rounded-lg text-gray-700 bg-white hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm hover:-translate-y-0.5">
              View Financial Ledger 
              <FileText className="w-4 h-4 ml-2"/>
            </a>

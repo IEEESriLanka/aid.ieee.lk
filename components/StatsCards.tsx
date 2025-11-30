@@ -17,7 +17,7 @@ export const StatsCards: React.FC<Props> = ({ summary }) => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         
         {/* Total Collected */}
-        <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6 flex items-start justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6 flex items-start justify-between hover:shadow-md transition-shadow reveal">
           <div>
             <p className="text-sm font-medium text-gray-500">Total Funds Raised</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{formatCurrency(summary.totalCollected)}</p>
@@ -32,7 +32,7 @@ export const StatsCards: React.FC<Props> = ({ summary }) => {
         </div>
 
         {/* Total Spent */}
-        <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6 flex items-start justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6 flex items-start justify-between hover:shadow-md transition-shadow reveal delay-100">
           <div>
             <p className="text-sm font-medium text-gray-500">Total Disbursed</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{formatCurrency(summary.totalSpent)}</p>
@@ -46,7 +46,7 @@ export const StatsCards: React.FC<Props> = ({ summary }) => {
         </div>
 
         {/* Balance */}
-        <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6 flex items-start justify-between hover:shadow-md transition-shadow">
+        <div className="bg-white overflow-hidden rounded-xl shadow-sm border border-gray-100 p-6 flex items-start justify-between hover:shadow-md transition-shadow reveal delay-200">
           <div>
             <p className="text-sm font-medium text-gray-500">Remaining Balance</p>
             <p className="mt-2 text-3xl font-bold text-gray-900">{formatCurrency(summary.remainingBalance)}</p>

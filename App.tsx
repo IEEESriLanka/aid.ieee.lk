@@ -48,6 +48,27 @@ function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Initialize Scroll Reveal Observer
+  useEffect(() => {
+    if (loading) return;
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('active');
+        }
+      });
+    }, {
+      threshold: 0.1,
+      rootMargin: "0px 0px -50px 0px" // Trigger slightly before element comes fully into view
+    });
+
+    const elements = document.querySelectorAll('.reveal');
+    elements.forEach((el) => observer.observe(el));
+
+    return () => observer.disconnect();
+  }, [loading]);
+
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -90,7 +111,7 @@ function App() {
         <ImpactFeed stories={stories} />
       </main>
       
-      <footer className="bg-gray-900 text-gray-400 py-12 text-sm">
+      <footer className="bg-gray-900 text-gray-400 py-12 text-sm reveal">
          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
                {/* Column 1: Copyright */}
@@ -128,7 +149,7 @@ function App() {
       {showScrollTop && (
         <button 
           onClick={scrollToTop}
-          className="fixed bottom-6 right-6 p-3 bg-[#00629B] text-white rounded-full shadow-lg hover:bg-[#004e7a] transition-all duration-300 z-50 animate-in fade-in zoom-in"
+          className="fixed bottom-6 right-6 p-3 bg-[#00629B] text-white rounded-full shadow-lg hover:bg-[#004e7a] transition-all duration-300 z-50 animate-in fade-in zoom-in hover:scale-110"
           aria-label="Scroll to top"
         >
           <ArrowUp className="w-5 h-5" />
