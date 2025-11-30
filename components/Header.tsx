@@ -13,7 +13,7 @@ export const Header: React.FC = () => {
              <a href="https://ieee.lk" target="_blank" rel="noopener noreferrer" className="hover:opacity-90 transition-opacity">
                 {/* PLACEHOLDER: Replace 'logo.png' with your actual image path */}
                 <img 
-                  src="https://placehold.co/300x80/00629B/ffffff?text=IEEE+Sri+Lanka+Section&font=poppins" 
+                  src="./logo.png" 
                   alt="IEEE Sri Lanka Section" 
                   className="h-10 w-auto md:h-12 object-contain"
                 />
