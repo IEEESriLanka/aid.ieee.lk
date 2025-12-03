@@ -1,5 +1,21 @@
 import { Transaction, ImpactStory, TransactionType } from '../types';
-import { MOCK_TRANSACTIONS, MOCK_IMPACT, USE_MOCK_DATA, SHEET_TRANSACTIONS_URL, SHEET_IMPACT_URL } from '../constants';
+import { SHEET_TRANSACTIONS_URL, SHEET_IMPACT_URL } from '../constants';
+
+// Security: Validate URLs to prevent javascript: XSS attacks
+const isValidUrl = (urlString: string): boolean => {
+  if (!urlString) return false;
+  try {
+    const url = new URL(urlString);
+    return url.protocol === "http:" || url.protocol === "https:";
+  } catch (e) {
+    return false;
+  }
+};
+
+// Helper to check if string is an iframe embed code
+const isIframeString = (str: string): boolean => {
+  return typeof str === 'string' && str.trim().startsWith('<iframe') && str.includes('src="');
+};
 
 // Helper to parse CSV string to JSON
 const parseCSV = (csvText: string) => {
@@ -10,7 +26,7 @@ const parseCSV = (csvText: string) => {
 
   const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
   
-  // Safety Check: If headers don't look like our CSV (e.g., we fetched an HTML page by mistake), return empty
+  // Safety Check
   if (!headers.includes('Date') && !headers.includes('date')) {
       console.warn('Invalid CSV format detected. Check your Google Sheet URL.');
       return [];
@@ -36,18 +52,6 @@ const parseCSV = (csvText: string) => {
 };
 
 export const fetchTransactions = async (): Promise<Transaction[]> => {
-  if (USE_MOCK_DATA) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(MOCK_TRANSACTIONS.map((t, i) => ({
-          ...t,
-          id: i.toString(),
-          type: t.type as TransactionType
-        })));
-      }, 800);
-    });
-  }
-
   try {
     if (!SHEET_TRANSACTIONS_URL) return [];
 
@@ -57,15 +61,20 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
     const text = await response.text();
     const data = parseCSV(text);
     
-    return data.map((row: any, index: number) => ({
-      id: `trans-${index}`,
-      date: row.Date || '',
-      description: row.Description || '',
-      category: row.Category || 'General',
-      amount: parseFloat(row.Amount ? row.Amount.replace(/,/g, '') : '0') || 0,
-      type: row.Type === 'Credit' ? TransactionType.CREDIT : TransactionType.DEBIT,
-      proofLink: row.ProofLink || undefined
-    }));
+    return data.map((row: any, index: number) => {
+      // Sanitize inputs
+      const proofLink = row.ProofLink && isValidUrl(row.ProofLink) ? row.ProofLink : undefined;
+      
+      return {
+        id: `trans-${index}`,
+        date: row.Date || '',
+        description: row.Description || '',
+        category: row.Category || 'General',
+        amount: parseFloat(row.Amount ? row.Amount.replace(/,/g, '') : '0') || 0,
+        type: row.Type === 'Credit' ? TransactionType.CREDIT : TransactionType.DEBIT,
+        proofLink: proofLink
+      };
+    });
   } catch (error) {
     console.error("Failed to fetch transactions", error);
     return [];
@@ -73,14 +82,6 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
 };
 
 export const fetchImpactStories = async (): Promise<ImpactStory[]> => {
-  if (USE_MOCK_DATA) {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(MOCK_IMPACT.map((s, i) => ({ ...s, id: i.toString() })));
-      }, 800);
-    });
-  }
-
   try {
     if (!SHEET_IMPACT_URL) return [];
 
@@ -90,13 +91,26 @@ export const fetchImpactStories = async (): Promise<ImpactStory[]> => {
     const text = await response.text();
     const data = parseCSV(text);
     
-    return data.map((row: any, index: number) => ({
-      id: `story-${index}`,
-      date: row.Date || '',
-      title: row.Title || '',
-      description: row.Description || '',
-      imageUrl: row.ImageUrl || undefined
-    }));
+    return data.map((row: any, index: number) => {
+      // Sanitize inputs: Allow valid URLs OR iframe embed strings
+      let imageUrl = undefined;
+      const rawImageInput = row.ImageUrl || '';
+      
+      if (isValidUrl(rawImageInput)) {
+        imageUrl = rawImageInput;
+      } else if (isIframeString(rawImageInput)) {
+        // Allow iframe strings to pass through; they will be parsed by the component
+        imageUrl = rawImageInput;
+      }
+
+      return {
+        id: `story-${index}`,
+        date: row.Date || '',
+        title: row.Title || '',
+        description: row.Description || '',
+        imageUrl: imageUrl
+      };
+    });
   } catch (error) {
     console.error("Failed to fetch impact stories", error);
     return [];

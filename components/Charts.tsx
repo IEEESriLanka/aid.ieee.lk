@@ -1,15 +1,24 @@
 import React from 'react';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Transaction, TransactionType } from '../types';
 
 interface Props {
   transactions: Transaction[];
 }
 
-const COLORS = ['#00629B', '#0084d1', '#4dafe0', '#99d0ef', '#e6f2f9', '#FFBB28', '#FF8042'];
+// Updated Vibrant Multi-Color Palette
+const COLORS = [
+  '#00629B', // IEEE Blue
+  '#EF4444', // Red
+  '#10B981', // Emerald Green
+  '#F59E0B', // Amber/Orange
+  '#8B5CF6', // Violet
+  '#EC4899', // Pink
+  '#06B6D4', // Cyan
+  '#6366F1'  // Indigo
+];
 
-export const ExpenseBreakdown: React.FC<Props> = ({ transactions }) => {
-  // Aggregate expenses by category
+export const ExpenseBreakdown: React.FC<Props> = React.memo(({ transactions }) => {
   const expenseData = transactions
     .filter(t => t.type === TransactionType.DEBIT)
     .reduce((acc: any, curr) => {
@@ -25,7 +34,7 @@ export const ExpenseBreakdown: React.FC<Props> = ({ transactions }) => {
 
   if (expenseData.length === 0) {
     return (
-      <div className="flex justify-center items-center h-64 text-gray-400 reveal">
+      <div className="flex justify-center items-center h-64 text-gray-400 dark:text-gray-500 reveal">
         No expense data available yet.
       </div>
     );
@@ -34,9 +43,9 @@ export const ExpenseBreakdown: React.FC<Props> = ({ transactions }) => {
   const CustomTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white p-3 border border-gray-100 shadow-lg rounded-lg">
-          <p className="text-sm font-semibold text-gray-900">{payload[0].name}</p>
-          <p className="text-sm text-[#00629B]">
+        <div className="bg-white dark:bg-slate-800 p-4 border border-gray-100 dark:border-slate-700 shadow-xl rounded-2xl">
+          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">{payload[0].name}</p>
+          <p className="text-lg font-bold text-[#00629B] dark:text-blue-400 font-mono">
             {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR' }).format(payload[0].value)}
           </p>
         </div>
@@ -45,53 +54,73 @@ export const ExpenseBreakdown: React.FC<Props> = ({ transactions }) => {
     return null;
   };
 
+  const totalExpenses = expenseData.reduce((a: any, b: any) => a + b.value, 0);
+
   return (
-    <div id="breakdown" className="py-12 bg-white">
-       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
-          <h2 className="text-2xl font-bold text-gray-900 mb-8">Utilization Breakdown</h2>
+    <div id="breakdown" className="py-24 transition-colors duration-500 bg-white dark:bg-[#020617] relative overflow-hidden">
+       {/* Subtle background element */}
+       <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-50/50 dark:bg-slate-900/30 -skew-x-12 transform translate-x-20 pointer-events-none"></div>
+
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal relative z-10">
+          <div className="flex flex-col md:flex-row items-end justify-between mb-12">
+            <div>
+              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight font-heading">Funds Utilization</h2>
+              <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Transparent breakdown of every rupee spent.</p>
+            </div>
+            <div className="hidden md:block text-right">
+                <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Total Disbursed</p>
+                <p className="text-2xl font-bold text-[#00629B] dark:text-blue-400 font-mono">
+                    {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(totalExpenses)}
+                </p>
+            </div>
+          </div>
           
-          {/* Increased gap from gap-4/md:gap-8 to gap-8/lg:gap-16 to fix clutter */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 lg:gap-16 items-center">
-             <div className="lg:col-span-2 h-80 w-full">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+             {/* Chart Section */}
+             <div className="lg:col-span-7 h-96 w-full relative">
                 <ResponsiveContainer width="100%" height="100%">
                   <PieChart>
                     <Pie
                       data={expenseData}
                       cx="50%"
                       cy="50%"
-                      innerRadius={80}
-                      outerRadius={120}
-                      paddingAngle={5}
+                      innerRadius={100}
+                      outerRadius={150}
+                      paddingAngle={4}
                       dataKey="value"
+                      stroke="none"
                     >
                       {expenseData.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="stroke-white dark:stroke-[#020617] stroke-2 outline-none" />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend verticalAlign="bottom" height={36}/>
                   </PieChart>
                 </ResponsiveContainer>
              </div>
              
-             <div className="bg-gray-50 rounded-xl p-6 shadow-sm border border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Expense Categories</h3>
-                <ul className="space-y-3">
-                   {expenseData.map((item: any, idx: number) => (
-                     <li key={idx} className="flex justify-between items-center text-sm">
-                       <span className="flex items-center text-gray-600">
-                         <span className="w-3 h-3 rounded-full mr-2" style={{ backgroundColor: COLORS[idx % COLORS.length] }}></span>
-                         {item.name}
-                       </span>
-                       <span className="font-medium text-gray-900">
-                          {new Intl.NumberFormat('en-LK', { notation: "compact", compactDisplay: "short" }).format(item.value)}
-                       </span>
-                     </li>
-                   ))}
-                </ul>
+             {/* Category Breakdown List */}
+             <div className="lg:col-span-5 space-y-4">
+                {expenseData.map((entry: any, index: number) => {
+                    const percentage = ((entry.value / totalExpenses) * 100).toFixed(1);
+                    return (
+                        <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+                            <div className="flex items-center gap-3">
+                                <div className="w-3 h-12 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                <div>
+                                    <p className="font-bold text-gray-900 dark:text-white text-sm">{entry.name}</p>
+                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{percentage}%</p>
+                                </div>
+                            </div>
+                            <p className="font-mono font-bold text-gray-700 dark:text-gray-300 text-sm">
+                                {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(entry.value)}
+                            </p>
+                        </div>
+                    );
+                })}
              </div>
           </div>
        </div>
     </div>
   );
-};
+});

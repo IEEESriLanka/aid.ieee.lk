@@ -7,13 +7,64 @@ import { TransactionTable } from './components/TransactionTable';
 import { ImpactFeed } from './components/ImpactFeed';
 import { Transaction, ImpactStory, TransactionType } from './types';
 import { fetchTransactions, fetchImpactStories } from './services/dataService';
-import { Loader2, Phone, ArrowUp } from 'lucide-react';
+import { Phone, ArrowUp, Globe, Facebook, Linkedin, Instagram } from 'lucide-react';
+import { IEEE_BLUE } from './constants';
+
+// Global Background Component - Dynamic Line Art
+const GlobalBackground = React.memo(({ isDark }: { isDark: boolean }) => (
+  <div className={`fixed inset-0 pointer-events-none z-0 overflow-hidden transition-colors duration-500 ${isDark ? 'bg-[#020617]' : 'bg-[#F8FAFC]'}`}>
+    
+    {/* Floating Orbs for depth */}
+    <div className={`absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full blur-3xl animate-float transition-colors duration-500 ${isDark ? 'bg-blue-900/10' : 'bg-blue-400/5'}`}></div>
+    <div className={`absolute bottom-[-10%] left-[-10%] w-[600px] h-[600px] rounded-full blur-3xl animate-float transition-colors duration-500 ${isDark ? 'bg-[#00629B]/10' : 'bg-[#00629B]/5'}`} style={{ animationDelay: '2s' }}></div>
+
+    {/* Moving Line Art - Topographic / Data Flow Style */}
+    <svg className={`absolute w-[200%] h-full transition-opacity duration-500 ${isDark ? 'opacity-30' : 'opacity-60'}`} xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <defs>
+            <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={IEEE_BLUE} stopOpacity="0" />
+                <stop offset="50%" stopColor={IEEE_BLUE} stopOpacity="0.8" />
+                <stop offset="100%" stopColor={IEEE_BLUE} stopOpacity="0" />
+            </linearGradient>
+        </defs>
+        
+        {/* Slow drifting lines */}
+        <path className="animate-drift-slow" fill="none" stroke="url(#lineGradient)" strokeWidth="2.5" 
+              d="M0,200 Q400,100 800,250 T1600,150 T2400,250 T3200,150" />
+        
+        <path className="animate-drift-medium" fill="none" stroke="url(#lineGradient)" strokeWidth="2" 
+              d="M0,400 Q300,450 600,350 T1200,450 T1800,350 T2400,450" style={{ opacity: 0.9 }} />
+              
+        <path className="animate-drift-slow" fill="none" stroke="url(#lineGradient)" strokeWidth="3" 
+              d="M0,600 Q500,500 1000,650 T2000,550 T3000,650" style={{ animationDuration: '70s' }} />
+
+        <path className="animate-drift-medium" fill="none" stroke="url(#lineGradient)" strokeWidth="2" 
+              d="M0,800 Q400,750 800,850 T1600,750 T2400,850" style={{ animationDuration: '50s', opacity: 0.8 }} />
+    </svg>
+    
+    {/* Gradient Overlay to fade lines at edges */}
+    <div className={`absolute inset-0 bg-gradient-to-b transition-colors duration-500 ${isDark ? 'from-[#020617] via-transparent to-[#020617]/80' : 'from-white via-transparent to-white/60'}`}></div>
+  </div>
+));
 
 function App() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [stories, setStories] = useState<ImpactStory[]>([]);
   const [loading, setLoading] = useState(true);
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [isDark, setIsDark] = useState(false);
+
+  useEffect(() => {
+    if (isDark) {
+      document.documentElement.classList.add('dark');
+      document.body.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+      document.body.classList.remove('dark');
+    }
+  }, [isDark]);
+
+  const toggleTheme = () => setIsDark(!isDark);
 
   useEffect(() => {
     const loadData = async () => {
@@ -23,14 +74,13 @@ function App() {
           fetchImpactStories()
         ]);
         
-        // Sort transactions by date descending
         const sortedTrans = transData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
         setTransactions(sortedTrans);
         setStories(impactData);
       } catch (error) {
         console.error("Error loading app data", error);
       } finally {
-        setLoading(false);
+        setTimeout(() => setLoading(false), 1500);
       }
     };
 
@@ -44,7 +94,8 @@ function App() {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
+    // Use passive listener for better scroll performance
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -60,7 +111,7 @@ function App() {
       });
     }, {
       threshold: 0.1,
-      rootMargin: "0px 0px -50px 0px" // Trigger slightly before element comes fully into view
+      rootMargin: "0px 0px -50px 0px"
     });
 
     const elements = document.querySelectorAll('.reveal');
@@ -73,7 +124,6 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // Calculate Summary Stats from the raw data for integrity
   const summary = useMemo(() => {
     const totalCollected = transactions
       .filter(t => t.type === TransactionType.CREDIT)
@@ -92,60 +142,93 @@ function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex flex-col items-center justify-center">
-         <Loader2 className="w-10 h-10 text-[#00629B] animate-spin mb-4" />
-         <p className="text-gray-500 font-medium">Loading Transparency Report...</p>
+      <div className={`min-h-screen flex flex-col items-center justify-center relative overflow-hidden transition-colors duration-500 ${isDark ? 'bg-[#020617]' : 'bg-white'}`}>
+         <GlobalBackground isDark={isDark} />
+         <div className="relative z-10 flex flex-col items-center">
+            {/* Futuristic Tech Loader */}
+            <div className="relative w-32 h-32 mb-8">
+               {/* Outer Dashed Ring */}
+               <div className="absolute inset-0 border-2 border-dashed border-[#00629B]/30 rounded-full animate-[spin_10s_linear_infinite]"></div>
+               
+               {/* Rotating Arcs */}
+               <div className="absolute inset-2 border-2 border-transparent border-t-[#00629B] rounded-full animate-[spin_2s_linear_infinite]"></div>
+               <div className="absolute inset-4 border-2 border-transparent border-b-[#00629B]/70 rounded-full animate-[spin_1.5s_linear_infinite_reverse]"></div>
+               
+               {/* Central Pulse */}
+               <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="w-4 h-4 bg-[#00629B] rounded-full shadow-[0_0_20px_#00629B] animate-pulse"></div>
+                  <div className="absolute w-12 h-12 bg-[#00629B]/10 rounded-full animate-ping"></div>
+               </div>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-[#00629B] font-heading mb-2 tracking-tight">IEEE Sri Lanka Section</h2>
+            <p className="mt-2 text-xs font-bold tracking-[0.3em] uppercase text-gray-400 animate-pulse">Syncing Records...</p>
+         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white text-gray-900 font-sans relative">
-      <Header />
-      <main>
-        <Hero />
-        <DonationSection />
-        <StatsCards summary={summary} />
-        <ExpenseBreakdown transactions={transactions} />
-        <TransactionTable transactions={transactions} />
-        <ImpactFeed stories={stories} />
-      </main>
+    <div className={`min-h-screen font-sans relative transition-colors duration-500 ${isDark ? 'text-white' : 'text-gray-900'}`}>
+      <GlobalBackground isDark={isDark} />
       
-      <footer className="bg-gray-900 text-gray-400 py-12 text-sm reveal">
-         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
-               {/* Column 1: Copyright */}
-               <div className="text-center md:text-left">
-                  <p>&copy; {new Date().getFullYear()} IEEE Sri Lanka Section. All rights reserved.</p>
-                  <p className="mt-2 text-gray-500">Transparency Report for Cyclone Ditwah Relief.</p>
-               </div>
+      {/* Content Container - Ensure z-index is above background */}
+      <div className="relative z-10">
+        <Header isDark={isDark} toggleTheme={toggleTheme} />
+        <main>
+          <Hero />
+          <DonationSection />
+          <StatsCards summary={summary} />
+          <ExpenseBreakdown transactions={transactions} />
+          <TransactionTable transactions={transactions} />
+          <ImpactFeed stories={stories} />
+        </main>
+        
+        <footer className="bg-[#0B1120] text-gray-400 py-12 text-sm reveal border-t border-gray-800 relative z-20">
+           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-start">
+                 <div className="text-center md:text-left">
+                    <p className="font-heading text-white text-lg mb-2">IEEE Sri Lanka Section</p>
+                    <p>&copy; {new Date().getFullYear()} All rights reserved.</p>
+                    <p className="mt-2 text-gray-500">Transparency Report for Cyclone Ditwah Relief.</p>
+                 </div>
 
-               {/* Column 2: Emergency Contacts */}
-               <div className="flex flex-col items-center md:items-start">
-                  <h4 className="text-white font-semibold mb-3 uppercase tracking-wider text-xs">Emergency Contacts</h4>
-                  <div className="space-y-2">
-                     <div className="flex items-center gap-2">
-                        <Phone className="w-3 h-3 text-blue-400"/>
-                        <span>Upul: <a href="tel:+94716487689" className="text-gray-300 hover:text-white transition-colors">+94 71 648 7689</a></span>
-                     </div>
-                     <div className="flex items-center gap-2">
-                        <Phone className="w-3 h-3 text-blue-400"/>
-                        <span>Heshan: <a href="tel:+94712462986" className="text-gray-300 hover:text-white transition-colors">+94 71 246 2986</a></span>
-                     </div>
-                  </div>
-               </div>
+                 <div className="flex flex-col items-center md:items-start">
+                    <h4 className="text-white font-semibold mb-3 uppercase tracking-wider text-xs">For More Details Please Contact</h4>
+                    <div className="space-y-2">
+                       <div className="flex items-center gap-2">
+                          <Phone className="w-3 h-3 text-blue-400"/>
+                          <span>Kavinga Upul Ekanayaka: <a href="tel:+94716487689" className="text-gray-300 hover:text-white transition-colors">+94 71 648 7689</a></span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                          <Phone className="w-3 h-3 text-blue-400"/>
+                          <span>Heshan Mallawaarachchi: <a href="tel:+94712462986" className="text-gray-300 hover:text-white transition-colors">+94 71 246 2986</a></span>
+                       </div>
+                    </div>
+                 </div>
 
-               {/* Column 3: Links */}
-               <div className="flex justify-center md:justify-end">
-                  <a href="https://ieee.lk" target="_blank" rel="noreferrer" className="text-lg font-bold text-gray-300 hover:text-white transition-colors">
-                     ieee.lk
-                  </a>
-               </div>
-            </div>
-         </div>
-      </footer>
+                 <div className="flex flex-col items-center md:items-end gap-4">
+                    <h4 className="text-white font-semibold uppercase tracking-wider text-xs">Connect With Us</h4>
+                    <div className="flex gap-4">
+                        <a href="https://www.facebook.com/IEEESriLanka/" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-white/5 hover:bg-[#00629B] text-gray-400 hover:text-white transition-all duration-300 group" aria-label="Facebook">
+                            <Facebook className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <a href="https://www.linkedin.com/company/ieee-sri-lanka-section/" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-white/5 hover:bg-[#0077b5] text-gray-400 hover:text-white transition-all duration-300 group" aria-label="LinkedIn">
+                            <Linkedin className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </a>
+                         <a href="https://www.instagram.com/ieeesrilanka/" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-white/5 hover:bg-pink-600 text-gray-400 hover:text-white transition-all duration-300 group" aria-label="Instagram">
+                            <Instagram className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </a>
+                        <a href="https://ieee.lk" target="_blank" rel="noreferrer" className="p-2 rounded-full bg-white/5 hover:bg-[#00629B] text-gray-400 hover:text-white transition-all duration-300 group" aria-label="Website">
+                            <Globe className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                        </a>
+                    </div>
+                 </div>
+              </div>
+           </div>
+        </footer>
+      </div>
 
-      {/* Go To Top Button */}
       {showScrollTop && (
         <button 
           onClick={scrollToTop}

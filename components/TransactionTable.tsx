@@ -1,14 +1,26 @@
 import React, { useState, useMemo } from 'react';
 import { Transaction, TransactionType } from '../types';
-import { Search, ExternalLink, Download, ArrowUpRight, ArrowDownLeft } from 'lucide-react';
+import { Search, ExternalLink, Download, ArrowUpRight, ArrowDownLeft, Filter, ChevronDown } from 'lucide-react';
 
 interface Props {
   transactions: Transaction[];
 }
 
-export const TransactionTable: React.FC<Props> = ({ transactions }) => {
+// Helper to assign consistent colors to categories
+const getCategoryColor = (category: string) => {
+  const normalized = category.toLowerCase().trim();
+  if (normalized.includes('food') || normalized.includes('ration')) return 'bg-orange-100 text-orange-700 border-orange-200 dark:bg-orange-900/30 dark:text-orange-400 dark:border-orange-800';
+  if (normalized.includes('med') || normalized.includes('health')) return 'bg-red-100 text-red-700 border-red-200 dark:bg-red-900/30 dark:text-red-400 dark:border-red-800';
+  if (normalized.includes('transport') || normalized.includes('logistics')) return 'bg-blue-100 text-blue-700 border-blue-200 dark:bg-blue-900/30 dark:text-blue-400 dark:border-blue-800';
+  if (normalized.includes('shelter') || normalized.includes('house')) return 'bg-purple-100 text-purple-700 border-purple-200 dark:bg-purple-900/30 dark:text-purple-400 dark:border-purple-800';
+  if (normalized.includes('donation') || normalized.includes('fund')) return 'bg-green-100 text-green-700 border-green-200 dark:bg-green-900/30 dark:text-green-400 dark:border-green-800';
+  return 'bg-gray-100 text-gray-700 border-gray-200 dark:bg-slate-700 dark:text-gray-300 dark:border-slate-600';
+};
+
+export const TransactionTable: React.FC<Props> = React.memo(({ transactions }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState<string>('all');
+  const [displayLimit, setDisplayLimit] = useState(10);
 
   const filteredTransactions = useMemo(() => {
     return transactions.filter(t => {
@@ -19,136 +31,199 @@ export const TransactionTable: React.FC<Props> = ({ transactions }) => {
     });
   }, [transactions, searchTerm, filterType]);
 
+  const visibleTransactions = filteredTransactions.slice(0, displayLimit);
+  const hasMore = filteredTransactions.length > displayLimit;
+
+  const handleShowMore = () => {
+    setDisplayLimit(prev => prev + 10);
+  };
+
   const downloadCSV = () => {
-     // Simple client-side CSV export
      const headers = ['Date', 'Description', 'Category', 'Amount', 'Type'];
-     const csvContent = "data:text/csv;charset=utf-8," 
-         + headers.join(",") + "\n"
-         + filteredTransactions.map(e => `${e.date},"${e.description}",${e.category},${e.amount},${e.type}`).join("\n");
-     
+     const escapeCsvCell = (cell: string | number) => {
+       const stringValue = String(cell);
+       if (/^[=\+\-@]/.test(stringValue)) {
+         return `"'${stringValue.replace(/"/g, '""')}"`;
+       }
+       if (stringValue.includes('"') || stringValue.includes(',')) {
+         return `"${stringValue.replace(/"/g, '""')}"`;
+       }
+       return stringValue;
+     };
+
+     const rows = filteredTransactions.map(e => [
+       escapeCsvCell(e.date),
+       escapeCsvCell(e.description),
+       escapeCsvCell(e.category),
+       escapeCsvCell(e.amount),
+       escapeCsvCell(e.type)
+     ].join(","));
+
+     const csvContent = "data:text/csv;charset=utf-8," + headers.join(",") + "\n" + rows.join("\n");
      const encodedUri = encodeURI(csvContent);
      const link = document.createElement("a");
      link.setAttribute("href", encodedUri);
-     link.setAttribute("download", "ieee_sl_relief_data.csv");
+     link.setAttribute("download", "ieee_sl_relief_ledger.csv");
      document.body.appendChild(link);
      link.click();
      document.body.removeChild(link);
   };
 
+  const getTabClass = (id: string) => {
+    if (filterType !== id) {
+        return 'bg-white dark:bg-slate-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-300';
+    }
+    // Active states with specific colors
+    if (id === TransactionType.CREDIT) return 'bg-green-600 text-white border-transparent shadow-md shadow-green-900/10';
+    if (id === TransactionType.DEBIT) return 'bg-red-600 text-white border-transparent shadow-md shadow-red-900/10';
+    return 'bg-[#00629B] text-white border-transparent shadow-md shadow-blue-900/10';
+  };
+
   return (
-    <div id="transparency" className="py-12 bg-gray-50">
+    <div id="transparency" className="py-24 transition-colors duration-500 bg-gray-50 dark:bg-[#020617] border-t border-gray-200 dark:border-gray-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
-        <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+        
+        {/* Header Section */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Financial Ledger</h2>
-            <p className="text-gray-500 text-sm mt-1">Full detailed history of all inputs and outputs.</p>
+            <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight font-heading">Financial Ledger</h2>
+            <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">A real-time, auditable record of every transaction.</p>
           </div>
           
           <div className="flex flex-col sm:flex-row gap-3">
-             <button onClick={downloadCSV} className="inline-flex items-center justify-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50">
-                <Download className="w-4 h-4 mr-2" />
-                Export CSV
-             </button>
-             <div className="relative">
+             <div className="relative group">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Search className="h-4 w-4 text-gray-400" />
+                  <Search className="h-4 w-4 text-gray-400 group-focus-within:text-[#00629B] dark:group-focus-within:text-blue-400 transition-colors" />
                 </div>
                 <input
                   type="text"
-                  placeholder="Search description..."
-                  className="block w-full sm:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-[#00629B] focus:border-[#00629B] sm:text-sm"
+                  placeholder="Search ledger..."
+                  className="block w-full sm:w-72 pl-10 pr-4 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl leading-5 bg-white dark:bg-slate-800 placeholder-gray-400 dark:placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-[#00629B]/20 dark:focus:ring-blue-500/30 focus:border-[#00629B] dark:focus:border-blue-500 transition-all shadow-sm"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
              </div>
+             <button 
+                onClick={downloadCSV} 
+                className="inline-flex items-center justify-center px-5 py-2.5 border border-gray-200 dark:border-slate-700 shadow-sm text-sm font-semibold rounded-xl text-gray-700 dark:text-gray-200 bg-white dark:bg-slate-800 hover:bg-gray-50 dark:hover:bg-slate-700 transition-all focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 dark:focus:ring-slate-700"
+             >
+                <Download className="w-4 h-4 mr-2" />
+                Export CSV
+             </button>
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-            <button 
-                onClick={() => setFilterType('all')} 
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${filterType === 'all' ? 'bg-[#00629B] text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
-            >
-                All
-            </button>
-            <button 
-                onClick={() => setFilterType(TransactionType.CREDIT)} 
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${filterType === TransactionType.CREDIT ? 'bg-green-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
-            >
-                Received
-            </button>
-            <button 
-                onClick={() => setFilterType(TransactionType.DEBIT)} 
-                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${filterType === TransactionType.DEBIT ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-100'}`}
-            >
-                Spent
-            </button>
+        {/* Filter Tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2 no-scrollbar">
+            {[
+                { id: 'all', label: 'All Transactions' },
+                { id: TransactionType.CREDIT, label: 'Incoming Funds' },
+                { id: TransactionType.DEBIT, label: 'Outgoing Aid' }
+            ].map(tab => (
+                <button 
+                    key={tab.id}
+                    onClick={() => { setFilterType(tab.id); setDisplayLimit(10); }} 
+                    className={`px-5 py-2 rounded-full text-sm font-semibold transition-all duration-200 whitespace-nowrap border ${getTabClass(tab.id)}`}
+                >
+                    {tab.label}
+                </button>
+            ))}
         </div>
 
-        {/* Table */}
-        <div className="bg-white shadow overflow-hidden border-b border-gray-200 sm:rounded-lg overflow-x-auto custom-scrollbar">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                <th scope="col" className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Amount (LKR)</th>
-                <th scope="col" className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Proof</th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredTransactions.length > 0 ? (
-                  filteredTransactions.map((transaction) => (
-                    <tr key={transaction.id} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {transaction.date}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-900">
-                         <div className="flex items-center">
-                            {transaction.type === TransactionType.CREDIT ? (
-                                <ArrowDownLeft className="w-4 h-4 text-green-500 mr-2 flex-shrink-0" />
-                            ) : (
-                                <ArrowUpRight className="w-4 h-4 text-blue-500 mr-2 flex-shrink-0" />
-                            )}
-                            {transaction.description}
-                         </div>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                            transaction.type === TransactionType.CREDIT ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'
-                        }`}>
-                          {transaction.category}
-                        </span>
-                      </td>
-                      <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-medium ${
-                          transaction.type === TransactionType.CREDIT ? 'text-green-600' : 'text-gray-900'
-                      }`}>
-                        {transaction.type === TransactionType.CREDIT ? '+' : '-'} {new Intl.NumberFormat('en-LK').format(transaction.amount)}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                        {transaction.proofLink ? (
-                          <a href={transaction.proofLink} target="_blank" rel="noopener noreferrer" className="text-[#00629B] hover:text-[#004e7a]">
-                            <ExternalLink className="w-4 h-4 mx-auto" />
-                          </a>
-                        ) : (
-                          <span className="text-gray-300">-</span>
-                        )}
-                      </td>
+        {/* Ledger Table */}
+        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-gray-200/40 dark:shadow-black/30 overflow-hidden border border-gray-100 dark:border-slate-700">
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="min-w-full divide-y divide-gray-100 dark:divide-slate-700">
+              <thead>
+                <tr className="bg-gray-50/50 dark:bg-slate-900/50">
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Date</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Description</th>
+                  <th scope="col" className="px-6 py-4 text-left text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Category</th>
+                  <th scope="col" className="px-6 py-4 text-right text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Amount (LKR)</th>
+                  <th scope="col" className="px-6 py-4 text-center text-xs font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Proof</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white dark:bg-slate-800 divide-y divide-gray-50 dark:divide-slate-700">
+                {visibleTransactions.length > 0 ? (
+                    visibleTransactions.map((transaction) => {
+                      const isCredit = transaction.type === TransactionType.CREDIT;
+                      const badgeColor = getCategoryColor(transaction.category);
+                      
+                      return (
+                      <tr key={transaction.id} className={`hover:bg-gray-50 dark:hover:bg-slate-700/50 transition-colors group border-l-4 ${isCredit ? 'border-l-green-400' : 'border-l-red-400'}`}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-500 dark:text-gray-400 font-mono">
+                          {transaction.date}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900 dark:text-gray-200">
+                           <div className="flex items-center font-medium">
+                              <div className={`p-1.5 rounded-full mr-3 ${
+                                  isCredit ? 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400' : 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400'
+                              }`}>
+                                {isCredit ? (
+                                    <ArrowDownLeft className="w-3.5 h-3.5" />
+                                ) : (
+                                    <ArrowUpRight className="w-3.5 h-3.5" />
+                                )}
+                              </div>
+                              {transaction.description}
+                           </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <span className={`px-2.5 py-1 inline-flex text-xs leading-5 font-bold rounded-full uppercase tracking-wide border ${badgeColor}`}>
+                            {transaction.category}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-right">
+                            <span className={`text-sm font-bold font-mono tracking-tight ${
+                                isCredit ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'
+                            }`}>
+                                {isCredit ? '+' : '-'} {new Intl.NumberFormat('en-LK').format(transaction.amount)}
+                            </span>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
+                          {transaction.proofLink ? (
+                            <a 
+                                href={transaction.proofLink} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-gray-50 dark:bg-slate-700 text-[#00629B] dark:text-blue-400 border border-gray-200 dark:border-slate-600 hover:bg-[#00629B] hover:text-white hover:border-[#00629B] dark:hover:bg-blue-500 dark:hover:text-white transition-all duration-200 shadow-sm"
+                                title="View Receipt"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                            </a>
+                          ) : (
+                            <span className="text-gray-300 dark:text-gray-600">-</span>
+                          )}
+                        </td>
+                      </tr>
+                    )})
+                ) : (
+                    <tr>
+                        <td colSpan={5} className="px-6 py-16 text-center text-gray-400 dark:text-gray-500 bg-gray-50/30 dark:bg-slate-900/30">
+                            <div className="flex flex-col items-center justify-center">
+                                <Filter className="w-8 h-8 mb-2 opacity-20" />
+                                <p className="text-sm font-medium">No records found matching your criteria.</p>
+                            </div>
+                        </td>
                     </tr>
-                  ))
-              ) : (
-                  <tr>
-                      <td colSpan={5} className="px-6 py-12 text-center text-gray-500 text-sm">
-                          No records found matching your criteria.
-                      </td>
-                  </tr>
-              )}
-            </tbody>
-          </table>
+                )}
+              </tbody>
+            </table>
+          </div>
+          
+          {hasMore && (
+              <div className="bg-gray-50 dark:bg-slate-800 p-4 border-t border-gray-100 dark:border-slate-700 flex justify-center">
+                  <button 
+                    onClick={handleShowMore}
+                    className="flex items-center gap-2 px-6 py-2.5 text-sm font-semibold text-[#00629B] dark:text-blue-400 bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600 rounded-full hover:bg-blue-50 dark:hover:bg-slate-600 hover:border-blue-200 dark:hover:border-slate-500 transition-all shadow-sm"
+                  >
+                    Show More Records
+                    <ChevronDown className="w-4 h-4" />
+                  </button>
+              </div>
+          )}
         </div>
       </div>
     </div>
   );
-};
+});
