@@ -17,7 +17,7 @@
 - Tech stack
 - Local development
 - Data configuration (Google Sheets)
-- Deployment (GitHub Pages)
+- Deployment (GitHub Pages / Vercel)
 - Operations and data integrity
 - Contribution guidelines
 - Troubleshooting
@@ -76,7 +76,7 @@ Why this approach works well for volunteer maintenance:
 - Tailwind CSS
 - Lucide React
 - Recharts
-- GitHub Pages (custom domain)
+- Vercel / GitHub Pages (custom domain)
 - Google Sheets (CSV export) as the data source
 
 ---
@@ -91,8 +91,8 @@ Why this approach works well for volunteer maintenance:
 
 Clone the repository:
 ```bash
-git clone https://github.com/IEEESriLanka/IEEESL-DRF-Web.git
-cd IEEESL-DRF-Web
+git clone https://github.com/IEEESriLanka/aid.ieee.lk.git
+cd aid.ieee.lk
 ```
 
 Install dependencies:
@@ -148,28 +148,20 @@ Important:
 
 ---
 
-## Deployment (GitHub Pages)
+## Deployment
 
-This project deploys automatically using GitHub Actions.
+This project is optimized for deployment on Vercel or GitHub Pages.
 
-### Workflow
-- Any push to `main` triggers the workflow at `.github/workflows/deploy.yml`.
-- The pipeline runs `npm ci` (or `npm install`), then `npm run build`.
-- The `dist/` folder is deployed to GitHub Pages.
+### Vercel (Recommended)
+1. Import the repository to Vercel.
+2. The `vercel.json` file included in the root ensures single-page application routing works correctly.
 
-### Custom domain
-
-The live site uses:
-- `drf.ieee.lk`
-
-Configuration details:
-- `vite.config.ts` uses `base: '/'`.
+### GitHub Pages
 - A `public/CNAME` file contains:
   ```text
-  drf.ieee.lk
+  aid.ieee.lk
   ```
-
-This ensures the custom domain setting persists after deployments.
+- This ensures the custom domain setting persists after deployments.
 
 ---
 
@@ -227,8 +219,8 @@ Recommended operating practices for clean reporting:
 - Check for duplicate transaction rows.
 
 ### Custom domain not working after deploy
-- Verify `public/CNAME` exists and contains `drf.ieee.lk`.
-- Confirm the DNS record is still correct and the GitHub Pages domain is set.
+- Verify `public/CNAME` exists and contains `aid.ieee.lk`.
+- Confirm the DNS record is still correct.
 
 ---
 
