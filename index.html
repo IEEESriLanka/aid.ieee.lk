@@ -23,10 +23,9 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="icon" type="image/png" href="./logo.ico" />
+    <link rel="icon" type="image/png" href="/logo.ico" />
     
-    <!-- Changed from /index.css to ./index.css for relative path loading -->
-    <link rel="stylesheet" href="./index.css">
+    <link rel="stylesheet" href="/index.css">
 
     <style>
       :root {
@@ -64,6 +63,17 @@
       
       .reveal { opacity: 0; transform: translateY(30px); transition: all 1s cubic-bezier(0.5, 0, 0, 1); }
       .reveal.active { opacity: 1; transform: translateY(0); }
+      
+      /* New Animation for dynamic content (View More) that doesn't rely on scroll observer */
+      @keyframes appear {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+      .animate-appear {
+        animation: appear 0.6s cubic-bezier(0.5, 0, 0, 1) forwards;
+      }
+      
+      .will-change-transform { will-change: transform; }
       
       .delay-100 { transition-delay: 100ms; }
       .delay-200 { transition-delay: 200ms; }
@@ -121,24 +131,22 @@
 <script type="importmap">
 {
   "imports": {
-    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
-    "react/": "https://aistudiocdn.com/react@^19.2.1/",
     "react": "https://aistudiocdn.com/react@^19.2.1",
-    "vite": "https://aistudiocdn.com/vite@^7.2.6",
-    "path": "https://aistudiocdn.com/path@^0.12.7",
-    "recharts": "https://aistudiocdn.com/recharts@^3.5.1",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.1/",
+    "react/": "https://aistudiocdn.com/react@^19.2.1/",
+    "react-router-dom": "https://aistudiocdn.com/react-router-dom@^7.10.0",
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "vite": "https://aistudiocdn.com/vite@^7.2.6",
     "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1",
-    "url": "https://aistudiocdn.com/url@^0.11.4"
+    "path": "https://aistudiocdn.com/path@^0.12.7",
+    "url": "https://aistudiocdn.com/url@^0.11.4",
+    "recharts": "https://aistudiocdn.com/recharts@^3.5.1"
   }
 }
 </script>
-<link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
-    
-    <script type="module" src="./index.tsx"></script>
-  <script type="module" src="/index.tsx"></script>
-</body>
+    <script type="module" src="/index.tsx"></script>
+  </body>
 </html>

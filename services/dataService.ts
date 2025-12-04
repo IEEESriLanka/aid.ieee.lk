@@ -55,7 +55,11 @@ const validateUrl = (url: string, allowIframe = false): string | undefined => {
       return validUrl;
     }
   } catch (e) {
-    // Invalid URL structure
+    // If it fails standard URL parsing but looks like a valid link (e.g. simplified format), return it sanitized
+    // This helps with some copied links that might have odd characters
+    if (/^https?:\/\/[^\s/$.?#].[^\s]*$/i.test(validUrl)) {
+        return validUrl;
+    }
   }
   return undefined;
 };
@@ -73,8 +77,19 @@ export const fetchTransactions = async (): Promise<Transaction[]> => {
       category: row['Category'] || 'General',
       amount: parseFloat((row['Amount'] || '0').replace(/[^0-9.-]+/g, '')),
       type: (row['Type'] === 'Credit' || row['Type'] === 'Incoming') ? TransactionType.CREDIT : TransactionType.DEBIT,
-      // Enhanced check for various proof column names
-      proofLink: validateUrl(row['Proof'] || row['Link'] || row['Receipt'] || row['ProofLink'] || row['Proof Link'] || row['Url'] || row['URL'])
+      // Enhanced check for various proof column names to handle different user inputs
+      proofLink: validateUrl(
+        row['Proof'] || 
+        row['Link'] || 
+        row['Receipt'] || 
+        row['ProofLink'] || 
+        row['Proof Link'] || 
+        row['Proof URL'] ||
+        row['Payment Proof'] ||
+        row['Slip'] ||
+        row['Url'] || 
+        row['URL']
+      )
     })).filter((t: Transaction) => t.date && !isNaN(t.amount));
   } catch (error) {
     console.error("Failed to fetch transactions", error);
@@ -93,8 +108,8 @@ export const fetchImpactStories = async (): Promise<ImpactStory[]> => {
       date: row['Date'] || '',
       title: row['Title'] || '',
       description: row['Description'] || '',
-      // Added row['ImageUrl'] to the check list
-      imageUrl: validateUrl(row['ImageUrl'] || row['Image'] || row['Media'], true)
+      // Enhanced ImageUrl mapping
+      imageUrl: validateUrl(row['ImageUrl'] || row['Image'] || row['Media'] || row['Video'] || row['Link'], true)
     })).filter((s: ImpactStory) => s.title);
   } catch (error) {
     console.error("Failed to fetch stories", error);

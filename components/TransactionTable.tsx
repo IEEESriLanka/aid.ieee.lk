@@ -92,7 +92,7 @@ export const TransactionTable: React.FC<Props> = React.memo(({ transactions }) =
   };
 
   return (
-    <div id="transparency" className="py-24 transition-colors duration-500 bg-gray-50 dark:bg-[#020617] border-t border-gray-200 dark:border-gray-800">
+    <div id="transparency" className="py-24 bg-transparent relative z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
         
         {/* Header Section */}
@@ -142,7 +142,7 @@ export const TransactionTable: React.FC<Props> = React.memo(({ transactions }) =
             ))}
         </div>
 
-        {/* Ledger Table */}
+        {/* Ledger Table Container (Card Style) */}
         <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl shadow-gray-200/40 dark:shadow-black/30 overflow-hidden border border-gray-100 dark:border-slate-700">
           <div className="overflow-x-auto custom-scrollbar">
             <table className="min-w-full divide-y divide-gray-100 dark:divide-slate-700">

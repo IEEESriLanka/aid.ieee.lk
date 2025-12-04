@@ -57,68 +57,74 @@ export const ExpenseBreakdown: React.FC<Props> = React.memo(({ transactions }) =
   const totalExpenses = expenseData.reduce((a: any, b: any) => a + b.value, 0);
 
   return (
-    <div id="breakdown" className="py-24 transition-colors duration-500 bg-white dark:bg-[#020617] relative overflow-hidden">
-       {/* Subtle background element */}
-       <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-50/50 dark:bg-slate-900/30 -skew-x-12 transform translate-x-20 pointer-events-none"></div>
-
-       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal relative z-10">
-          <div className="flex flex-col md:flex-row items-end justify-between mb-12">
-            <div>
-              <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight font-heading">Funds Utilization</h2>
-              <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Transparent breakdown of every rupee spent.</p>
-            </div>
-            <div className="hidden md:block text-right">
-                <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Total Disbursed</p>
-                <p className="text-2xl font-bold text-[#00629B] dark:text-blue-400 font-mono">
-                    {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(totalExpenses)}
-                </p>
-            </div>
-          </div>
+    <div id="breakdown" className="py-24 bg-transparent relative z-10">
+       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
           
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-             {/* Chart Section */}
-             <div className="lg:col-span-7 h-96 w-full relative">
-                <ResponsiveContainer width="100%" height="100%">
-                  <PieChart>
-                    <Pie
-                      data={expenseData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={100}
-                      outerRadius={150}
-                      paddingAngle={4}
-                      dataKey="value"
-                      stroke="none"
-                    >
-                      {expenseData.map((entry: any, index: number) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="stroke-white dark:stroke-[#020617] stroke-2 outline-none" />
-                      ))}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-             </div>
-             
-             {/* Category Breakdown List */}
-             <div className="lg:col-span-5 space-y-4">
-                {expenseData.map((entry: any, index: number) => {
-                    const percentage = ((entry.value / totalExpenses) * 100).toFixed(1);
-                    return (
-                        <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 hover:shadow-md transition-shadow">
-                            <div className="flex items-center gap-3">
-                                <div className="w-3 h-12 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                <div>
-                                    <p className="font-bold text-gray-900 dark:text-white text-sm">{entry.name}</p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{percentage}%</p>
+          {/* Card Container */}
+          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl shadow-gray-200/40 dark:shadow-black/30 overflow-hidden border border-gray-100 dark:border-slate-700 p-8 sm:p-12 relative">
+              {/* Decorative element */}
+              <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-50/50 dark:bg-slate-900/30 -skew-x-12 transform translate-x-20 pointer-events-none"></div>
+
+              <div className="relative z-10">
+                  <div className="flex flex-col md:flex-row items-end justify-between mb-12">
+                    <div>
+                      <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight font-heading">Funds Utilization</h2>
+                      <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Transparent breakdown of every rupee spent.</p>
+                    </div>
+                    <div className="hidden md:block text-right">
+                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Total Disbursed</p>
+                        <p className="text-2xl font-bold text-[#00629B] dark:text-blue-400 font-mono">
+                            {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(totalExpenses)}
+                        </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+                     {/* Chart Section */}
+                     <div className="lg:col-span-7 h-96 w-full relative">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <PieChart>
+                            <Pie
+                              data={expenseData}
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={100}
+                              outerRadius={150}
+                              paddingAngle={4}
+                              dataKey="value"
+                              stroke="none"
+                            >
+                              {expenseData.map((entry: any, index: number) => (
+                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="stroke-white dark:stroke-[#020617] stroke-2 outline-none" />
+                              ))}
+                            </Pie>
+                            <Tooltip content={<CustomTooltip />} />
+                          </PieChart>
+                        </ResponsiveContainer>
+                     </div>
+                     
+                     {/* Category Breakdown List */}
+                     <div className="lg:col-span-5 space-y-4">
+                        {expenseData.map((entry: any, index: number) => {
+                            const percentage = ((entry.value / totalExpenses) * 100).toFixed(1);
+                            return (
+                                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 hover:shadow-md transition-shadow">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-3 h-12 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
+                                        <div>
+                                            <p className="font-bold text-gray-900 dark:text-white text-sm">{entry.name}</p>
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{percentage}%</p>
+                                        </div>
+                                    </div>
+                                    <p className="font-mono font-bold text-gray-700 dark:text-gray-300 text-sm">
+                                        {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(entry.value)}
+                                    </p>
                                 </div>
-                            </div>
-                            <p className="font-mono font-bold text-gray-700 dark:text-gray-300 text-sm">
-                                {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(entry.value)}
-                            </p>
-                        </div>
-                    );
-                })}
-             </div>
+                            );
+                        })}
+                     </div>
+                  </div>
+              </div>
           </div>
        </div>
     </div>
