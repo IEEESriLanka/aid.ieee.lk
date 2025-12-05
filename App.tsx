@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Home } from '@/pages/Home';
 import { Donate } from '@/pages/Donate';
@@ -12,10 +12,23 @@ import { fetchTransactions, fetchImpactStories } from '@/services/dataService';
 import { Phone, ArrowUp, Globe, Facebook, Linkedin, Instagram } from 'lucide-react';
 import { IEEE_BLUE } from '@/constants';
 
-// RouteHandler to manage Scroll-to-Top and Reveal Animations on navigation
+// RouteHandler to manage Scroll-to-Top, Reveal Animations, and Legacy Hash Redirects
 const RouteHandler = () => {
   const location = useLocation();
+  const navigate = useNavigate();
 
+  // 1. Hash Compatibility Fix
+  // If a user lands on /#/donate (due to old redirects), move them to /donate
+  useEffect(() => {
+    if (window.location.hash) {
+      const hashPath = window.location.hash.replace(/^#/, '');
+      if (hashPath.startsWith('/')) {
+        navigate(hashPath, { replace: true });
+      }
+    }
+  }, [navigate]);
+
+  // 2. Scroll and Animation Logic
   useEffect(() => {
     // Only scroll to top if there is NO hash. If there is a hash (anchors), browser handles it.
     if (!location.hash) {
