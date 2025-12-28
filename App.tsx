@@ -1,10 +1,11 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, Navigate, useNavigate, useParams } from 'react-router-dom';
 import { Header } from '@/components/Header';
 import { Home } from '@/pages/Home';
 import { Donate } from '@/pages/Donate';
 import { Ledger } from '@/pages/Ledger';
 import { Campaign } from '@/pages/Campaign';
+import { ImpactDetail } from '@/pages/ImpactDetail';
 import { OperationalFramework } from '@/pages/OperationalFramework';
 import { Volunteers } from '@/pages/Volunteers';
 import { Transaction, ImpactStory, TransactionType } from '@/types';
@@ -66,6 +67,12 @@ const RouteHandler = () => {
   }, [location]);
 
   return null;
+};
+
+// Helper component for dynamic redirects
+const RedirectWithSlug = () => {
+  const { slug } = useParams();
+  return <Navigate to={`/impact/${slug}`} replace />;
 };
 
 // Global Background Component - Dynamic Line Art
@@ -215,7 +222,14 @@ function App() {
               <Route path="/" element={<Home stories={stories} transactions={transactions} summary={summary} />} />
               
               {/* Specific Campaign Page (Detailed) */}
-              <Route path="/2025-cyclone-ditwah" element={<Campaign stories={stories} />} />
+              <Route path="/impact" element={<Campaign stories={stories} />} />
+              
+              {/* Legacy Redirects */}
+              <Route path="/2025-cyclone-ditwah" element={<Navigate to="/impact" replace />} />
+              <Route path="/2025-cyclone-ditwah/:slug" element={<RedirectWithSlug />} />
+              
+              {/* Individual Impact Detail Page */}
+              <Route path="/impact/:slug" element={<ImpactDetail stories={stories} />} />
               
               {/* Standalone Pages */}
               <Route path="/donate" element={<Donate />} />
@@ -234,7 +248,7 @@ function App() {
                    <div className="text-center md:text-left">
                       <p className="font-heading text-white text-lg mb-2">IEEE Sri Lanka Section</p>
                       <p>&copy; {new Date().getFullYear()} All rights reserved.</p>
-                      <p className="mt-2 text-gray-500">Transparency Report for Cyclone Ditwah Relief.</p>
+                      <p className="mt-2 text-gray-500">Disaster Relief Fund: Transparency & Utilization Report.</p>
                    </div>
 
                    <div className="flex flex-col items-center md:items-start">

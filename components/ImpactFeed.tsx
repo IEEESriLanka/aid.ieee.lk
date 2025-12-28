@@ -1,59 +1,145 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { ImpactStory } from '../types';
-import { Calendar, Heart, Play, Image as ImageIcon, ArrowRight, ChevronUp, ChevronDown } from 'lucide-react';
+import { ImpactStory } from '@/types'; 
+import { Calendar, Heart, Play, Image as ImageIcon, ArrowRight, MapPin } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
 interface Props {
   stories: ImpactStory[];
-  forceExpanded?: boolean; // New prop to force "Campaign Mode"
+  forceExpanded?: boolean;
 }
 
-const StoryCard = React.memo<{ story: ImpactStory, index: number, forceExpanded?: boolean }>(({ story, index, forceExpanded }) => {
-  const [imgSrc, setImgSrc] = useState<string>('');
-  const [hasError, setHasError] = useState(false);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  const getYouTubeId = (input: string) => {
-    if (!input) return null;
-    let url = input;
+// --- ROBUST IMAGE & VIDEO LOGIC ---
 
-    if (input.includes('<iframe') && input.includes('src="')) {
-        const srcMatch = input.match(/src="([^"]+)"/);
+/**
+ * Analyzes a raw URL string and returns the best possible preview image URL and video ID (if applicable).
+ * Handles:
+ * 1. Dirty HTML (iframe/img tags pasted in fields)
+ * 2. Google Drive links (converts to thumbnail)
+ * 3. YouTube links (extracts ID, returns thumbnail)
+ * 4. FreeImage.host (converts to direct iili.io link)
+ * 5. Dropbox (converts dl=0 to dl=1)
+ */
+const getSmartMediaDetails = (rawInput: string | undefined) => {
+    if (!rawInput) return { type: 'none', src: '', videoId: null };
+
+    let url = rawInput.trim();
+
+    // 1. Cleanup HTML Snippets (User pasted <iframe src="..."> or <img src="...">)
+    if (url.includes('<') && url.includes('>')) {
+        const srcMatch = url.match(/src=["'](.*?)["']/);
         if (srcMatch && srcMatch[1]) {
             url = srcMatch[1];
         }
     }
 
-    const regExp = /^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/;
-    const match = url.match(regExp);
-    return (match && match[2].length === 11) ? match[2] : null;
-  };
-
-  const processImageUrl = (url: string | undefined) => {
-    if (!url) return undefined;
-    if (url.includes('freeimage.host/i/')) {
-        const parts = url.split('/').filter(Boolean);
-        const id = parts[parts.length - 1];
-        if (id) return `https://iili.io/${id}.jpg`;
+    // 2. Detect YouTube
+    // Supports: youtube.com/watch?v=, youtu.be/, youtube.com/embed/
+    const ytRegex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+    const ytMatch = url.match(ytRegex);
+    if (ytMatch) {
+        const id = ytMatch[1];
+        return {
+            type: 'video',
+            src: `https://img.youtube.com/vi/${id}/maxresdefault.jpg`, // Try maxres first
+            videoId: id
+        };
     }
-    return url;
-  };
 
-  const videoId = getYouTubeId(story.imageUrl || '');
-  const isVideo = !!videoId;
+    // 3. Detect Google Drive
+    // Supports: drive.google.com/file/d/ID/view, drive.google.com/open?id=ID
+    const driveRegex = /(?:drive\.google\.com\/(?:file\/d\/|open\?id=)|docs\.google\.com\/file\/d\/)([-\w]{25,})/;
+    const driveMatch = url.match(driveRegex);
+    if (driveMatch) {
+        const id = driveMatch[1];
+        // Using Google Drive Thumbnail API
+        return {
+            type: 'image',
+            src: `https://drive.google.com/thumbnail?sz=w1200&id=${id}`,
+            videoId: null
+        };
+    }
+
+    // 4. FreeImage.host / iili.io Fix
+    // If user links the viewer page (freeimage.host/i/ID), guess the direct link (iili.io/ID.jpg)
+    if (url.includes('freeimage.host/i/')) {
+        const parts = url.split('/');
+        const id = parts[parts.length - 1];
+        if (id && !id.includes('.')) {
+            return {
+                type: 'image',
+                src: `https://iili.io/${id}.jpg`,
+                videoId: null
+            };
+        }
+    }
+
+    // 5. Dropbox Fix
+    if (url.includes('dropbox.com') && url.includes('dl=0')) {
+        return {
+            type: 'image',
+            src: url.replace('dl=0', 'dl=1'),
+            videoId: null
+        };
+    }
+
+    // Default: Assume direct image link
+    return {
+        type: 'image',
+        src: url,
+        videoId: null
+    };
+};
+
+
+// --- COMPONENTS ---
+
+const StoryCard = React.memo<{ story: ImpactStory, index: number, forceExpanded?: boolean }>(({ story, index, forceExpanded }) => {
+  const [imgSrc, setImgSrc] = useState<string>('');
+  const [hasError, setHasError] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const navigate = useNavigate();
+  
+  // Calculate media details on mount or change
+  const mediaDetails = useMemo(() => getSmartMediaDetails(story.imageUrl), [story.imageUrl]);
+  const isVideo = mediaDetails.type === 'video';
 
   useEffect(() => {
     setHasError(false);
-    if (videoId) {
-        setImgSrc(`https://img.youtube.com/vi/${videoId}/maxresdefault.jpg`);
-    } else {
-        setImgSrc(processImageUrl(story.imageUrl) || '');
+    setIsPlaying(false);
+    if (mediaDetails.src) {
+        setImgSrc(mediaDetails.src);
     }
-  }, [story.imageUrl, videoId]);
+  }, [mediaDetails]);
+
+  // Format Date Logic: Handles "StartDate - EndDate" logic
+  const formattedDate = useMemo(() => {
+      const formatDate = (d: string) => {
+          try {
+             const date = new Date(d);
+             // If invalid date, return original string
+             if (isNaN(date.getTime())) return d;
+             return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          } catch {
+             return d;
+          }
+      };
+
+      const startString = formatDate(story.date);
+
+      if (story.endDate) {
+          const endString = formatDate(story.endDate);
+          // Only show range if end date is different from start date
+          if (startString !== endString) {
+            return `${startString} - ${endString}`;
+          }
+      }
+      return startString;
+  }, [story.date, story.endDate]);
 
   const handleImageError = () => {
-    if (videoId && imgSrc.includes('maxresdefault')) {
-        setImgSrc(`https://img.youtube.com/vi/${videoId}/hqdefault.jpg`);
+    // If YouTube maxres fails, fallback to hqdefault
+    if (isVideo && imgSrc.includes('maxresdefault')) {
+        setImgSrc(`https://img.youtube.com/vi/${mediaDetails.videoId}/hqdefault.jpg`);
     } else {
         setHasError(true);
     }
@@ -64,26 +150,34 @@ const StoryCard = React.memo<{ story: ImpactStory, index: number, forceExpanded?
       setIsPlaying(true);
   };
 
+  const handleCardClick = () => {
+      if (!isPlaying) {
+          navigate(`/impact/${story.slug}`);
+      }
+  };
+
   const description = story.description || '';
-  const shouldTruncate = description.length > 150;
 
   return (
      <div 
-        className={`flex flex-col bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 dark:shadow-black/30 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-900/10 transition-all duration-300 group border border-gray-100 dark:border-slate-700 w-full h-full ${isExpanded ? 'row-span-2' : ''}`}
+        className={`flex flex-col bg-white dark:bg-slate-800 rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 dark:shadow-black/30 hover:shadow-2xl hover:shadow-blue-500/10 dark:hover:shadow-blue-900/10 transition-all duration-300 group border border-gray-100 dark:border-slate-700 w-full h-full`}
      >
-        {/* Media Container - Aspect Ratio 16:9 */}
-        <div className="aspect-video w-full overflow-hidden bg-gray-100 dark:bg-slate-900 relative flex-shrink-0">
-          {isPlaying && videoId ? (
+        {/* Media Container */}
+        <div 
+            className="aspect-video w-full overflow-hidden bg-gray-100 dark:bg-slate-900 relative flex-shrink-0 cursor-pointer"
+            onClick={!isVideo ? handleCardClick : undefined}
+        >
+          {isPlaying && isVideo && mediaDetails.videoId ? (
              <iframe
                 width="100%"
                 height="100%"
-                src={`https://www.youtube.com/embed/${videoId}?autoplay=1&origin=${window.location.origin}`}
+                src={`https://www.youtube.com/embed/${mediaDetails.videoId}?autoplay=1&origin=${window.location.origin}`}
                 title={story.title}
                 frameBorder="0"
                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                 referrerPolicy="strict-origin-when-cross-origin"
                 allowFullScreen
-                className="absolute inset-0 w-full h-full"
+                className="absolute inset-0 w-full h-full z-20"
              ></iframe>
           ) : !hasError && imgSrc ? (
             <>
@@ -93,6 +187,7 @@ const StoryCard = React.memo<{ story: ImpactStory, index: number, forceExpanded?
                   className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" 
                   loading="lazy"
                   onError={handleImageError}
+                  referrerPolicy="no-referrer"
                 />
                 {isVideo && (
                     <div 
@@ -104,9 +199,11 @@ const StoryCard = React.memo<{ story: ImpactStory, index: number, forceExpanded?
                         </div>
                     </div>
                 )}
+                {/* Gradient Overlay */}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-60 pointer-events-none"></div>
             </>
           ) : (
+            // Default Placeholder
             <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-slate-800 dark:to-slate-900 relative overflow-hidden">
                <div className="absolute inset-0 opacity-20 dark:opacity-5" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, #00629B 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
                <div className="absolute -bottom-10 -right-10 w-40 h-40 bg-blue-500/10 rounded-full blur-2xl"></div>
@@ -123,37 +220,38 @@ const StoryCard = React.memo<{ story: ImpactStory, index: number, forceExpanded?
         </div>
 
         <div className="p-6 flex flex-col flex-grow bg-white dark:bg-slate-800">
-            <div className="flex-none flex items-center text-xs font-bold text-[#00629B] dark:text-blue-400 uppercase tracking-wider mb-3 bg-blue-50 dark:bg-blue-900/20 inline-flex self-start px-3 py-1 rounded-full">
-                <Calendar className="w-3 h-3 mr-2" />
-                {story.date}
+            <div className="flex flex-wrap gap-2 mb-3">
+                <div className="flex-none flex items-center text-xs font-bold text-[#00629B] dark:text-blue-400 uppercase tracking-wider bg-blue-50 dark:bg-blue-900/20 px-3 py-1 rounded-full">
+                    <Calendar className="w-3 h-3 mr-2" />
+                    {formattedDate}
+                </div>
+                {story.location && (
+                    <div className="flex-none flex items-center text-xs font-bold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider bg-emerald-50 dark:bg-emerald-900/20 px-3 py-1 rounded-full">
+                        <MapPin className="w-3 h-3 mr-2" />
+                        {story.location}
+                    </div>
+                )}
             </div>
             
-            <h3 className="flex-none text-xl font-bold text-gray-900 dark:text-white mb-3 leading-snug group-hover:text-[#00629B] dark:group-hover:text-blue-400 transition-colors font-heading">
-                {story.title}
-            </h3>
+            <Link to={`/impact/${story.slug}`} className="flex-none block group/title">
+                <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-3 leading-snug group-hover/title:text-[#00629B] dark:group-hover/title:text-blue-400 transition-colors font-heading">
+                    {story.title}
+                </h3>
+            </Link>
             
             <div className="flex-1 relative">
-                <p className={`text-gray-500 dark:text-gray-400 leading-relaxed text-sm pr-1 transition-all duration-300 ${isExpanded ? '' : 'line-clamp-4'}`}>
+                <p className={`text-gray-500 dark:text-gray-400 leading-relaxed text-sm pr-1 transition-all duration-300 line-clamp-4`}>
                     {description}
                 </p>
             </div>
 
-            <div className="flex-none mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/50">
-              {shouldTruncate && (
-                  <button 
-                      onClick={(e) => {
-                          e.stopPropagation();
-                          setIsExpanded(!isExpanded);
-                      }}
-                      className="text-xs font-bold uppercase tracking-wider text-[#00629B] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors focus:outline-none flex items-center gap-1"
-                  >
-                      {isExpanded ? (
-                        <>Show Less <ChevronUp className="w-3 h-3" /></>
-                      ) : (
-                        <>Read Full Story <ChevronDown className="w-3 h-3" /></>
-                      )}
-                  </button>
-              )}
+            <div className="flex-none mt-4 pt-4 border-t border-gray-100 dark:border-slate-700/50 flex items-center justify-between">
+                <Link 
+                    to={`/impact/${story.slug}`}
+                    className="text-xs font-bold uppercase tracking-wider text-[#00629B] dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors focus:outline-none flex items-center gap-1"
+                >
+                    Read Full Story <ArrowRight className="w-3 h-3" />
+                </Link>
             </div>
         </div>
      </div>
@@ -161,48 +259,43 @@ const StoryCard = React.memo<{ story: ImpactStory, index: number, forceExpanded?
 });
 
 export const ImpactFeed: React.FC<Props> = React.memo(({ stories, forceExpanded = false }) => {
-  const [isDesktopExpanded, setIsDesktopExpanded] = useState(false);
-  const [isMobileAllVisible, setIsMobileAllVisible] = useState(false);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [isPaused, setIsPaused] = useState(false);
 
-  // If forceExpanded is true (Campaign Page), we are always "visible"
-  const isVisibleState = forceExpanded || isDesktopExpanded;
-
+  // If forceExpanded is true (Campaign page), we show everything.
+  // If false (Home page), we show top 5 and a link to View All.
+  
   const sortedStories = useMemo(() => {
     return [...stories].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [stories]);
 
   if (stories.length === 0) return null;
 
-  // Layout Logic:
   const visibleCount = 5;
-  const displayedStories = isVisibleState ? sortedStories : sortedStories.slice(0, visibleCount);
+  const displayedStories = forceExpanded ? sortedStories : sortedStories.slice(0, visibleCount);
   
-  // Mobile Auto-Scroll Logic
+  // Mobile Auto-Scroll Logic (Only active in carousel mode on mobile when not expanded)
   useEffect(() => {
-    // Only auto-scroll if we are in carousel mode (not "View All")
-    if (isMobileAllVisible || !scrollContainerRef.current || forceExpanded) return;
-
+    if (forceExpanded || !scrollContainerRef.current) return;
     const scrollContainer = scrollContainerRef.current;
     
     const interval = setInterval(() => {
         if (isPaused) return;
+        // Don't auto scroll if user is interacting or if it's not the carousel view
+        if (window.innerWidth >= 768) return; 
 
-        // Calculate card width + gap. Assuming roughly 85vw + gap
         const scrollAmount = scrollContainer.clientWidth * 0.85; 
         const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth;
         
         if (scrollContainer.scrollLeft >= maxScroll - 10) {
-            // Loop back to start smoothly
             scrollContainer.scrollTo({ left: 0, behavior: 'smooth' });
         } else {
             scrollContainer.scrollBy({ left: scrollAmount, behavior: 'smooth' });
         }
-    }, 4000); // Scroll every 4 seconds
+    }, 4000);
 
     return () => clearInterval(interval);
-  }, [isMobileAllVisible, isPaused, forceExpanded]);
+  }, [isPaused, forceExpanded]);
 
 
   return (
@@ -232,7 +325,7 @@ export const ImpactFeed: React.FC<Props> = React.memo(({ stories, forceExpanded 
 
         {/* --- MOBILE LAYOUT (< md) --- */}
         <div className="md:hidden">
-            {!isMobileAllVisible ? (
+            {!forceExpanded ? (
                 // Carousel Mode
                 <div 
                     className="flex overflow-x-auto snap-x snap-mandatory gap-4 pb-8 no-scrollbar -mx-4 px-4"
@@ -246,75 +339,61 @@ export const ImpactFeed: React.FC<Props> = React.memo(({ stories, forceExpanded 
                         </div>
                     ))}
                     
-                    {/* View All Card in Carousel */}
                     {sortedStories.length > 5 && (
                         <div className="min-w-[50vw] snap-center h-full flex items-center">
-                            <button
-                                onClick={() => setIsMobileAllVisible(true)}
+                            <Link
+                                to="/impact"
                                 className="w-full h-[300px] rounded-3xl bg-white/50 dark:bg-slate-800/50 border-2 border-dashed border-gray-300 dark:border-slate-700 flex flex-col items-center justify-center text-center p-6"
                             >
                                 <div className="w-12 h-12 rounded-full bg-[#00629B]/10 flex items-center justify-center mb-4">
                                     <ArrowRight className="w-6 h-6 text-[#00629B]" />
                                 </div>
                                 <span className="font-bold text-[#00629B]">View All Updates</span>
-                            </button>
+                            </Link>
                         </div>
                     )}
                 </div>
             ) : (
-                // Vertical Stack Mode (View All)
+                // Vertical Stack Mode (When Expanded/Campaign Page)
                 <div className="flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
                     {sortedStories.map((story, index) => (
                         <div key={story.id} className="animate-appear">
-                            <StoryCard story={story} index={index} />
+                            <StoryCard story={story} index={index} forceExpanded={forceExpanded} />
                         </div>
                     ))}
                 </div>
             )}
 
-            {/* Mobile Toggle Button Area */}
-            <div className="mt-6 text-center">
-                {!isMobileAllVisible ? (
-                    <button 
-                        onClick={() => setIsMobileAllVisible(true)}
+            {!forceExpanded && (
+                <div className="mt-6 text-center">
+                    <Link 
+                        to="/impact"
                         className="inline-flex items-center px-6 py-3 rounded-full bg-[#00629B] text-white font-bold text-sm shadow-lg shadow-blue-500/20"
                     >
                         View All Updates <ArrowRight className="w-4 h-4 ml-2" />
-                    </button>
-                ) : (
-                    <button 
-                        onClick={() => {
-                            setIsMobileAllVisible(false);
-                            // Scroll back to top of section
-                            document.getElementById('impact')?.scrollIntoView({ behavior: 'smooth' });
-                        }}
-                        className="inline-flex items-center px-6 py-3 rounded-full bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 font-bold text-sm border border-gray-200 dark:border-slate-700"
-                    >
-                        Show Less <ChevronUp className="w-4 h-4 ml-2" />
-                    </button>
-                )}
-            </div>
+                    </Link>
+                </div>
+            )}
         </div>
 
         {/* --- DESKTOP LAYOUT (>= md) --- */}
         <div className="hidden md:block">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 items-stretch">
             {displayedStories.map((story, index) => {
-                const animationClass = (isVisibleState && index >= visibleCount) 
+                const animationClass = (forceExpanded && index >= visibleCount) 
                     ? 'animate-appear' 
                     : 'reveal delay-100';
 
                 return (
                 <div key={story.id} className={`h-full ${animationClass}`}>
-                    <StoryCard story={story} index={index} />
+                    <StoryCard story={story} index={index} forceExpanded={forceExpanded} />
                 </div>
                 );
             })}
 
-            {/* "See More" Card - Only if not expanded */}
-            {!forceExpanded && !isDesktopExpanded && sortedStories.length > visibleCount && (
-                <button
-                onClick={() => setIsDesktopExpanded(true)}
+            {!forceExpanded && sortedStories.length > visibleCount && (
+                <Link
+                to="/impact"
                 className="group relative flex flex-col items-center justify-center h-full min-h-[400px] rounded-3xl bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-2 border-dashed border-gray-300 dark:border-slate-700 hover:border-[#00629B] dark:hover:border-blue-400 transition-all duration-300 overflow-hidden shadow-sm hover:shadow-xl animate-appear w-full"
                 >
                     <div className="absolute inset-0 bg-gradient-to-br from-gray-50 to-white dark:from-slate-800 dark:to-slate-900 opacity-50 group-hover:opacity-100 transition-opacity"></div>
@@ -329,24 +408,9 @@ export const ImpactFeed: React.FC<Props> = React.memo(({ stories, forceExpanded 
                         Read {sortedStories.length - visibleCount} more stories about our relief efforts.
                     </p>
                     </div>
-                </button>
+                </Link>
             )}
             </div>
-
-            {/* Collapse Button - Only show if we expanded manually */}
-            {!forceExpanded && isDesktopExpanded && sortedStories.length > visibleCount && (
-                <div className="mt-12 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
-                    <button 
-                        onClick={() => {
-                            setIsDesktopExpanded(false);
-                            document.getElementById('impact')?.scrollIntoView({ behavior: 'smooth' });
-                        }}
-                        className="inline-flex items-center px-8 py-3 rounded-full bg-white dark:bg-slate-800 text-gray-700 dark:text-gray-200 font-bold text-sm shadow-md hover:shadow-lg border border-gray-200 dark:border-slate-700 hover:text-[#00629B] dark:hover:text-blue-400 transition-all"
-                    >
-                        Show Less <ChevronUp className="w-4 h-4 ml-2" />
-                    </button>
-                </div>
-            )}
         </div>
 
       </div>

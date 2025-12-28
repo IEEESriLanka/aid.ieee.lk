@@ -1,9 +1,9 @@
-# IEEE Sri Lanka Disaster Relief Transparency Portal
+# IEEE Sri Lanka Section — Disaster Relief Fund: Transparency & Utilization Report
 
 <div align="center">
   <img src="public/logo.png" alt="IEEE Sri Lanka Section Logo" height="80" />
   <h3>Transparency. Integrity. Impact.</h3>
-  <p>The official transparency and utilization dashboard for the IEEE Sri Lanka Section Disaster Relief Fund.</p>
+  <p>The official transparency and utilization report for the IEEE Sri Lanka Section Disaster Relief Fund.</p>
   <p><a href="https://aid.ieee.lk"><strong>Visit Live Site</strong></a></p>
 </div>
 
@@ -27,7 +27,7 @@
 
 ## About
 
-In response to natural disasters affecting Sri Lanka, the IEEE Sri Lanka Section established a Disaster Relief Fund.
+In response to the devastation caused by Cyclone Ditwah, the IEEE Sri Lanka Section established a Disaster Relief Fund.
 This web application acts as a public transparency ledger so donors and the public can verify:
 
 - Funds raised: totals of donations received

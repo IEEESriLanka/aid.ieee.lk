@@ -1,154 +1,187 @@
-import React, { useState } from 'react';
-import { Menu, X, ArrowRight, Heart, Sun, Moon } from 'lucide-react';
-import { Link, useLocation } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Menu, X, Sun, Moon, Heart, ArrowRight } from 'lucide-react';
 
-interface Props {
+interface HeaderProps {
   isDark: boolean;
   toggleTheme: () => void;
 }
 
-export const Header: React.FC<Props> = React.memo(({ isDark, toggleTheme }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
+export const Header: React.FC<HeaderProps> = ({ isDark, toggleTheme }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
 
-  // Helper to check active state for styling
-  const isActive = (path: string) => location.pathname === path;
+  const navItems = [
+    { label: 'Home', path: '/' },
+    { label: 'Campaign', path: '/impact' },
+    { label: 'Live Ledger', path: '/ledger' }, // Direct link to page
+    { label: 'Framework', path: '/operational-framework' },
+    { label: 'Volunteers', path: '/volunteers' },
+  ];
 
-  // Helper for consistent link styling
-  const getLinkClass = (path: string) => `px-4 py-2 text-sm font-medium rounded-full transition-all duration-300 ${
-    isActive(path)
-      ? (isDark ? 'text-white bg-white/10' : 'text-[#00629B] bg-white/50')
-      : (isDark ? 'text-gray-300 hover:text-white hover:bg-white/10' : 'text-gray-600 hover:text-[#00629B] hover:bg-white/50')
-  }`;
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  const isActive = (path: string) => {
+      if (path === '/' && location.pathname === '/' && !location.hash) return true;
+      if (path !== '/' && location.pathname.startsWith(path)) return true;
+      return false;
+  };
+
+  const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, path: string) => {
+    // Only intercept hash links on the homepage
+    if (path.startsWith('/#')) {
+        const [pathname, hash] = path.split('#');
+        if (location.pathname === pathname || (pathname === '/' && location.pathname === '/')) {
+            e.preventDefault();
+            const targetId = hash;
+            const element = document.getElementById(targetId);
+            if (element) {
+                const headerOffset = 100;
+                const elementPosition = element.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
+                });
+                window.history.pushState(null, '', path);
+            }
+        }
+    }
+    setIsOpen(false);
+  };
 
   return (
     <>
-    <header className="fixed top-4 left-0 right-0 z-50 transition-all duration-300 px-4">
-      {/* Liquid Frosted Glass Container */}
-      <div className={`max-w-7xl mx-auto backdrop-blur-2xl border rounded-full px-6 sm:px-8 py-3 flex justify-between items-center relative transition-all duration-500 ${
-        isDark 
-          ? 'bg-slate-900/60 border-white/10 shadow-2xl shadow-black/20 ring-1 ring-white/5 supports-[backdrop-filter]:bg-slate-900/50' 
-          : 'bg-white/70 border-white/40 shadow-xl shadow-blue-900/5 ring-1 ring-white/60 supports-[backdrop-filter]:bg-white/60'
-      }`}>
-          
-          <div className="flex items-center gap-4">
-             {/* Logo links to external main site */}
-             <a 
-                href="https://ieee.lk" 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="hover:opacity-80 transition-opacity flex items-center gap-3 group"
-             >
-                <img src="/logo.png" alt="IEEE Sri Lanka Section" className="h-10 w-auto object-contain" />
-             </a>
-          </div>
-          
-          <nav className="hidden lg:flex gap-1 items-center">
-            {/* Home Link Added */}
-            <Link to="/" className={getLinkClass('/')}>
-                Home
-            </Link>
-
-            {/* Navigation Links mapped to new routes */}
-            <Link to="/2025-cyclone-ditwah" className={getLinkClass('/2025-cyclone-ditwah')}>
-                Campaign
-            </Link>
-
-            <Link to="/ledger" className={getLinkClass('/ledger')}>
-                Live Ledger
-            </Link>
-
-            <Link to="/operational-framework" className={getLinkClass('/operational-framework')}>
-                Framework
-            </Link>
-
-            <Link to="/volunteers" className={getLinkClass('/volunteers')}>
-                Volunteers
-            </Link>
-          </nav>
-
-          <div className="flex items-center gap-3">
-               <button 
-                  onClick={toggleTheme} 
-                  className={`p-2 rounded-full transition-all duration-300 ${isDark ? 'bg-white/10 text-yellow-400 hover:bg-white/20' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                  aria-label="Toggle Theme"
-               >
-                  {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-               </button>
-
-               <Link to="/donate" className="hidden sm:flex items-center gap-2 px-5 py-2 rounded-full bg-red-600 hover:bg-red-700 text-white text-sm font-bold transition-all shadow-lg shadow-red-500/20 hover:shadow-red-500/40 animate-heartbeat">
-                  <span>Donate Now</span>
-                  <Heart className="w-4 h-4 fill-current" />
-               </Link>
-
-               <button 
-                  className="lg:hidden p-2 rounded-full text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-white/10 transition-colors"
-                  onClick={() => setIsMenuOpen(!isMenuOpen)}
-               >
-                  {isMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-               </button>
-            </div>
-      </div>
-
-      {/* Mobile Menu */}
-      {isMenuOpen && (
-           <div className="absolute top-full left-0 right-0 mt-2 px-4 lg:hidden animate-in fade-in slide-in-from-top-4 duration-200">
-              <div className={`p-4 rounded-3xl backdrop-blur-xl border shadow-2xl ${isDark ? 'bg-slate-900/90 border-white/10' : 'bg-white/90 border-gray-100'}`}>
-                 <div className="flex flex-col gap-2">
-                    <Link to="/" onClick={() => setIsMenuOpen(false)} className={`px-4 py-3 rounded-xl font-medium ${isActive('/') ? 'bg-[#00629B]/10 text-[#00629B] dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>Home</Link>
-                    <Link to="/2025-cyclone-ditwah" onClick={() => setIsMenuOpen(false)} className={`px-4 py-3 rounded-xl font-medium ${isActive('/2025-cyclone-ditwah') ? 'bg-[#00629B]/10 text-[#00629B] dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>Campaign</Link>
-                    <Link to="/ledger" onClick={() => setIsMenuOpen(false)} className={`px-4 py-3 rounded-xl font-medium ${isActive('/ledger') ? 'bg-[#00629B]/10 text-[#00629B] dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>Live Ledger</Link>
-                    <Link to="/operational-framework" onClick={() => setIsMenuOpen(false)} className={`px-4 py-3 rounded-xl font-medium ${isActive('/operational-framework') ? 'bg-[#00629B]/10 text-[#00629B] dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>Framework</Link>
-                    <Link to="/volunteers" onClick={() => setIsMenuOpen(false)} className={`px-4 py-3 rounded-xl font-medium ${isActive('/volunteers') ? 'bg-[#00629B]/10 text-[#00629B] dark:text-blue-400' : 'text-gray-600 dark:text-gray-300'}`}>Volunteers</Link>
-                    <Link to="/donate" onClick={() => setIsMenuOpen(false)} className="mt-2 flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold transition-colors shadow-lg shadow-red-500/20 animate-heartbeat">Donate Now <Heart className="w-4 h-4 fill-current" /></Link>
-                 </div>
-              </div>
-           </div>
-        )}
-    </header>
-    </>
-  );
-});
-
-export const Hero: React.FC = React.memo(() => {
-    return (
-        <div className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-50 dark:bg-blue-900/30 border border-blue-100 dark:border-blue-800 text-[#00629B] dark:text-blue-300 text-xs font-bold tracking-wider uppercase mb-8 animate-fade-in-up">
-                    <span className="relative flex h-2 w-2">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                      <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00629B]"></span>
-                    </span>
-                    Live Transparency Report
-                </div>
-
-                <h1 className="text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-gray-900 dark:text-white mb-6 font-heading leading-tight animate-fade-in-up delay-100">
-                    Rebuilding with <span className="text-[#00629B]">Integrity</span>
-                </h1>
-
-                <p className="mt-4 text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto mb-10 leading-relaxed font-medium animate-fade-in-up delay-200">
-                    In response to Cyclone Ditwah, IEEE Sri Lanka Section is dedicated to full financial transparency. Every donation is tracked, every expense is verified, and every outcome is reported here.
-                </p>
-
-                <div className="flex flex-col sm:flex-row gap-4 justify-center items-center animate-fade-in-up delay-300">
-                    <Link 
-                        to="/donate" 
-                        className="group relative px-8 py-4 bg-[#00629B] text-white rounded-full font-bold text-lg shadow-xl shadow-blue-600/20 hover:shadow-blue-600/40 hover:scale-105 transition-all duration-300 overflow-hidden"
-                    >
-                        <span className="relative z-10 flex items-center gap-2">
-                           Make a Donation <Heart className="w-5 h-5 fill-current" />
-                        </span>
-                        <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-[#00629B] opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                    </Link>
+        <div className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${scrolled ? 'pt-4' : 'pt-6'}`}>
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <nav className={`
+                    mx-auto rounded-full px-6 py-3 flex items-center justify-between relative transition-all duration-300
+                    ${scrolled 
+                        ? 'bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-lg border border-white/20 dark:border-slate-800' 
+                        : 'bg-white/40 dark:bg-slate-900/40 backdrop-blur-md border border-transparent'}
+                `}>
                     
-                    <Link 
-                        to="/ledger" 
-                        className="px-8 py-4 bg-white dark:bg-slate-800 text-gray-700 dark:text-white border border-gray-200 dark:border-slate-700 rounded-full font-bold text-lg hover:bg-gray-50 dark:hover:bg-slate-700 hover:border-gray-300 dark:hover:border-slate-600 transition-all duration-300 flex items-center gap-2"
-                    >
-                        View Financial Ledger <ArrowRight className="w-5 h-5" />
+                    <Link to="/" className="flex items-center gap-3 group relative z-10 shrink-0">
+                        <img src="/logo.png" alt="IEEE Sri Lanka Section" className="h-8 md:h-10 w-auto object-contain" />
                     </Link>
-                </div>
+
+                    <div className="hidden lg:flex items-center gap-1 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+                        {navItems.map((item) => (
+                            <Link 
+                                key={item.label} 
+                                to={item.path}
+                                onClick={(e) => handleNavClick(e, item.path)}
+                                className={`
+                                    px-4 py-2 rounded-full text-sm font-medium transition-all duration-300
+                                    ${isActive(item.path) 
+                                        ? 'text-[#00629B] bg-blue-50 dark:bg-blue-900/20' 
+                                        : 'text-gray-600 dark:text-gray-300 hover:text-[#00629B] hover:bg-white/50 dark:hover:bg-slate-800/50'}
+                                `}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                    </div>
+
+                    <div className="flex items-center gap-3 relative z-10 shrink-0">
+                        <button 
+                            onClick={toggleTheme}
+                            className="p-2.5 rounded-full text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition-colors bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm"
+                            aria-label="Toggle Theme"
+                        >
+                            {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+                        </button>
+
+                        <Link 
+                            to="/donate" 
+                            className={`hidden sm:inline-flex items-center px-6 py-2.5 rounded-full font-bold text-sm shadow-lg hover:shadow-xl transition-all duration-500 bg-red-600 text-white hover:bg-red-700 animate-heartbeat`}
+                        >
+                            Donate Now <Heart className="w-4 h-4 ml-2 fill-current" />
+                        </Link>
+
+                        <button 
+                            className="lg:hidden p-2 text-gray-600 dark:text-gray-300"
+                            onClick={() => setIsOpen(!isOpen)}
+                        >
+                            {isOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                        </button>
+                    </div>
+                </nav>
             </div>
         </div>
+
+        {isOpen && (
+            <div className="fixed inset-0 z-40 lg:hidden pt-24 px-4 pointer-events-none">
+                <div className="absolute inset-0 bg-black/20 backdrop-blur-sm pointer-events-auto" onClick={() => setIsOpen(false)}></div>
+                <div className="relative bg-white/90 dark:bg-slate-900/90 backdrop-blur-xl rounded-3xl shadow-2xl p-2 border border-white/20 dark:border-slate-700 animate-in slide-in-from-top-4 fade-in pointer-events-auto max-w-lg mx-auto">
+                    <div className="flex flex-col">
+                        {navItems.map((item) => (
+                            <Link 
+                                key={item.label} 
+                                to={item.path}
+                                onClick={(e) => handleNavClick(e, item.path)}
+                                className={`px-6 py-4 rounded-2xl text-center text-base font-medium transition-colors ${isActive(item.path) ? 'bg-blue-50 dark:bg-blue-900/30 text-[#00629B] dark:text-blue-400' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800'}`}
+                            >
+                                {item.label}
+                            </Link>
+                        ))}
+                        <div className="h-px bg-gray-100 dark:bg-slate-800 my-2"></div>
+                        <Link 
+                            to="/donate"
+                            onClick={() => setIsOpen(false)}
+                            className="flex items-center justify-center px-6 py-4 rounded-2xl bg-red-600 text-white font-bold text-base shadow-md mx-2 mb-2 animate-heartbeat"
+                        >
+                            <Heart className="w-5 h-5 mr-2 fill-current" />
+                            Donate Now
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        )}
+    </>
+  );
+};
+
+export const Hero: React.FC = () => {
+    return (
+        <section className="relative pt-40 pb-20 lg:pt-56 lg:pb-36 overflow-hidden">
+             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+                 <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50/80 dark:bg-blue-900/30 text-[#00629B] dark:text-blue-400 text-[10px] sm:text-xs font-extrabold mb-10 border border-blue-100 dark:border-blue-800 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-4 duration-700 backdrop-blur-sm">
+                     <span className="relative flex h-2 w-2 mr-3">
+                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                       <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00629B]"></span>
+                     </span>
+                     Live Transparency Report
+                 </div>
+                 
+                 <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0B1120] dark:text-white tracking-tighter mb-8 font-heading animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 leading-tight max-w-5xl mx-auto">
+                    Rebuilding with <span className="text-[#00629B]">Integrity</span>
+                 </h1>
+                 
+                 <p className="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-gray-600 dark:text-gray-300 leading-relaxed mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+                    In response to Cyclone Ditwah, IEEE Sri Lanka Section is dedicated to full financial transparency. Every donation is tracked, every expense is verified, and every outcome is reported here.
+                 </p>
+                 
+                 <div className="flex flex-col sm:flex-row gap-5 justify-center items-center animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+                    <Link 
+                        to="/donate" 
+                        className="px-10 py-4 bg-[#00629B] text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 hover:bg-gradient-to-r hover:from-cyan-400 hover:to-[#00629B] w-full sm:w-auto flex items-center justify-center group"
+                    >
+                        Make a Donation <Heart className="w-5 h-5 ml-2 fill-current" />
+                    </Link>
+                    <Link to="/ledger" className="px-10 py-4 bg-white dark:bg-slate-800 text-[#0B1120] dark:text-white border border-gray-200 dark:border-slate-700 rounded-full font-bold text-lg shadow-sm hover:shadow-md hover:-translate-y-1 transition-all duration-300 w-full sm:w-auto flex items-center justify-center hover:bg-gray-50 dark:hover:bg-slate-700">
+                        View Financial Ledger <ArrowRight className="w-5 h-5 ml-2" />
+                    </Link>
+                 </div>
+             </div>
+        </section>
     );
-});
+};

@@ -1,132 +1,140 @@
-import React from 'react';
+import React, { useMemo } from 'react';
+import { Transaction, TransactionType } from '@/types';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
-import { Transaction, TransactionType } from '../types';
 
-interface Props {
+interface ChartsProps {
   transactions: Transaction[];
 }
 
-// Updated Vibrant Multi-Color Palette
+// Vibrant Palette matching the screenshot vibe
 const COLORS = [
-  '#00629B', // IEEE Blue
-  '#EF4444', // Red
-  '#10B981', // Emerald Green
-  '#F59E0B', // Amber/Orange
-  '#8B5CF6', // Violet
-  '#EC4899', // Pink
-  '#06B6D4', // Cyan
-  '#6366F1'  // Indigo
+  '#00629B', // IEEE Blue (Food/Main)
+  '#EF4444', // Red (Cleaning)
+  '#10B981', // Emerald (Sanitation)
+  '#F59E0B', // Amber (Stationery)
+  '#8B5CF6', // Violet (Medical)
+  '#EC4899', // Pink (Logistics)
+  '#6366F1', // Indigo
+  '#14B8A6'  // Teal
 ];
 
-export const ExpenseBreakdown: React.FC<Props> = React.memo(({ transactions }) => {
-  const expenseData = transactions
-    .filter(t => t.type === TransactionType.DEBIT)
-    .reduce((acc: any, curr) => {
-      const existing = acc.find((item: any) => item.name === curr.category);
-      if (existing) {
-        existing.value += curr.amount;
-      } else {
-        acc.push({ name: curr.category, value: curr.amount });
-      }
-      return acc;
-    }, [])
-    .sort((a: any, b: any) => b.value - a.value);
+export const ExpenseBreakdown: React.FC<ChartsProps> = ({ transactions }) => {
+  const { data, totalDebits } = useMemo(() => {
+    const expenses = transactions.filter(t => t.type === TransactionType.DEBIT);
+    const total = expenses.reduce((sum, t) => sum + t.amount, 0);
+    
+    const categoryTotals: Record<string, number> = {};
 
-  if (expenseData.length === 0) {
-    return (
-      <div className="flex justify-center items-center h-64 text-gray-400 dark:text-gray-500 reveal">
-        No expense data available yet.
-      </div>
-    );
-  }
+    expenses.forEach(t => {
+      // Normalize category names to Title Case for better display
+      const catRaw = t.category.trim();
+      const cat = catRaw.charAt(0).toUpperCase() + catRaw.slice(1).toLowerCase();
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + t.amount;
+    });
 
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white dark:bg-slate-800 p-4 border border-gray-100 dark:border-slate-700 shadow-xl rounded-2xl">
-          <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">{payload[0].name}</p>
-          <p className="text-lg font-bold text-[#00629B] dark:text-blue-400 font-mono">
-            {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR' }).format(payload[0].value)}
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+    const chartData = Object.entries(categoryTotals)
+      .map(([name, value]) => ({ 
+        name, 
+        value,
+        percentage: total > 0 ? (value / total) * 100 : 0
+      }))
+      .sort((a, b) => b.value - a.value);
 
-  const totalExpenses = expenseData.reduce((a: any, b: any) => a + b.value, 0);
+    return { data: chartData, totalDebits: total };
+  }, [transactions]);
+
+  if (data.length === 0) return null;
 
   return (
-    <div id="breakdown" className="py-24 bg-transparent relative z-10">
-       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 reveal">
-          
-          {/* Card Container */}
-          <div className="bg-white dark:bg-slate-800 rounded-3xl shadow-xl shadow-gray-200/40 dark:shadow-black/30 overflow-hidden border border-gray-100 dark:border-slate-700 p-8 sm:p-12 relative">
-              {/* Decorative element */}
-              <div className="absolute top-0 right-0 w-1/3 h-full bg-gray-50/50 dark:bg-slate-900/30 -skew-x-12 transform translate-x-20 pointer-events-none"></div>
-
-              <div className="relative z-10">
-                  <div className="flex flex-col md:flex-row items-end justify-between mb-12">
+    <section className="py-12 bg-transparent">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white dark:bg-slate-900 rounded-3xl shadow-xl border border-gray-100 dark:border-slate-800 p-8 md:p-12">
+                
+                {/* Header Row */}
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-12">
                     <div>
-                      <h2 className="text-3xl font-extrabold text-gray-900 dark:text-white tracking-tight font-heading">Funds Utilization</h2>
-                      <p className="mt-2 text-lg text-gray-500 dark:text-gray-400">Transparent breakdown of every rupee spent.</p>
+                        <h2 className="text-2xl md:text-3xl font-extrabold text-gray-900 dark:text-white font-heading tracking-tight mb-4">Funds Utilization</h2>
+                        <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed font-normal">Transparent breakdown of every rupee spent.</p>
                     </div>
-                    <div className="hidden md:block text-right">
-                        <p className="text-xs font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-1">Total Disbursed</p>
-                        <p className="text-2xl font-bold text-[#00629B] dark:text-blue-400 font-mono">
-                            {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(totalExpenses)}
+                    <div className="mt-6 md:mt-0 text-left md:text-right">
+                        <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-1">Total Disbursed</p>
+                        <p className="text-3xl font-mono font-bold text-[#00629B] dark:text-blue-400">
+                            LKR {totalDebits.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                         </p>
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-                     {/* Chart Section */}
-                     <div className="lg:col-span-7 h-96 w-full relative">
+                </div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                    {/* Left Col: Donut Chart */}
+                    <div className="h-[350px] w-full relative">
                         <ResponsiveContainer width="100%" height="100%">
-                          <PieChart>
-                            <Pie
-                              data={expenseData}
-                              cx="50%"
-                              cy="50%"
-                              innerRadius={100}
-                              outerRadius={150}
-                              paddingAngle={4}
-                              dataKey="value"
-                              stroke="none"
-                            >
-                              {expenseData.map((entry: any, index: number) => (
-                                <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} className="stroke-white dark:stroke-[#020617] stroke-2 outline-none" />
-                              ))}
-                            </Pie>
-                            <Tooltip content={<CustomTooltip />} />
-                          </PieChart>
+                            <PieChart>
+                                <Pie
+                                    data={data}
+                                    cx="50%"
+                                    cy="50%"
+                                    innerRadius={90} 
+                                    outerRadius={140}
+                                    paddingAngle={3}
+                                    dataKey="value"
+                                    stroke="none"
+                                >
+                                    {data.map((entry, index) => (
+                                        <Cell 
+                                            key={`cell-${index}`} 
+                                            fill={COLORS[index % COLORS.length]} 
+                                            className="hover:opacity-80 transition-opacity duration-300 cursor-pointer outline-none"
+                                        />
+                                    ))}
+                                </Pie>
+                                <Tooltip 
+                                    formatter={(value: number) => `LKR ${value.toLocaleString()}`}
+                                    contentStyle={{ 
+                                        backgroundColor: 'rgba(255, 255, 255, 0.95)', 
+                                        borderRadius: '16px', 
+                                        border: 'none', 
+                                        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+                                        padding: '12px 16px',
+                                        color: '#1e293b'
+                                    }}
+                                    itemStyle={{ color: '#0f172a', fontWeight: '600' }}
+                                />
+                            </PieChart>
                         </ResponsiveContainer>
-                     </div>
-                     
-                     {/* Category Breakdown List */}
-                     <div className="lg:col-span-5 space-y-4">
-                        {expenseData.map((entry: any, index: number) => {
-                            const percentage = ((entry.value / totalExpenses) * 100).toFixed(1);
-                            return (
-                                <div key={index} className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-900 rounded-xl border border-gray-100 dark:border-slate-800 hover:shadow-md transition-shadow">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-3 h-12 rounded-full" style={{ backgroundColor: COLORS[index % COLORS.length] }}></div>
-                                        <div>
-                                            <p className="font-bold text-gray-900 dark:text-white text-sm">{entry.name}</p>
-                                            <p className="text-xs text-gray-500 dark:text-gray-400 font-mono">{percentage}%</p>
-                                        </div>
+                    </div>
+
+                    {/* Right Col: Detailed List */}
+                    <div className="space-y-4">
+                        {data.map((item, index) => (
+                            <div key={item.name} className="flex items-center justify-between p-4 rounded-2xl bg-gray-50 dark:bg-slate-800/50 border border-gray-100 dark:border-slate-800 hover:scale-[1.02] transition-transform duration-200">
+                                <div className="flex items-center gap-4">
+                                    {/* Color Indicator Bar */}
+                                    <div 
+                                        className="w-2 h-10 rounded-full" 
+                                        style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                                    ></div>
+                                    
+                                    <div>
+                                        <h4 className="font-bold text-gray-900 dark:text-white text-base">
+                                            {item.name}
+                                        </h4>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">
+                                            {item.percentage.toFixed(1)}%
+                                        </p>
                                     </div>
-                                    <p className="font-mono font-bold text-gray-700 dark:text-gray-300 text-sm">
-                                        {new Intl.NumberFormat('en-LK', { style: 'currency', currency: 'LKR', maximumFractionDigits: 0 }).format(entry.value)}
+                                </div>
+                                
+                                <div className="text-right">
+                                    <p className="font-mono font-bold text-gray-900 dark:text-white">
+                                        LKR {item.value.toLocaleString()}
                                     </p>
                                 </div>
-                            );
-                        })}
-                     </div>
-                  </div>
-              </div>
-          </div>
-       </div>
-    </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
   );
-});
+};

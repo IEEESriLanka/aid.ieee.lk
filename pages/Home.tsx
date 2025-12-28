@@ -21,7 +21,12 @@ export const Home: React.FC<HomeProps> = ({ stories, transactions, summary }) =>
       const id = window.location.hash.substring(1);
       const element = document.getElementById(id);
       if (element) {
-        setTimeout(() => element.scrollIntoView({ behavior: 'smooth' }), 100);
+        setTimeout(() => {
+            const headerOffset = 100;
+            const elementPosition = element.getBoundingClientRect().top;
+            const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+            window.scrollTo({ top: offsetPosition, behavior: 'smooth' });
+        }, 100);
       }
     } else {
       window.scrollTo(0, 0);
@@ -30,17 +35,31 @@ export const Home: React.FC<HomeProps> = ({ stories, transactions, summary }) =>
 
   return (
     <div>
+      <HomeNavigation />
+      
       <div id="hero">
         <Hero />
       </div>
-      <HomeNavigation />
       
-      {/* Sections with IDs for scrolling */}
+      {/* ImpactFeed has internal id="impact" */}
       <ImpactFeed stories={stories} />
-      <DonationSection />
-      <StatsCards summary={summary} />
-      <ExpenseBreakdown transactions={transactions} />
-      <TransactionTable transactions={transactions} />
+      
+      <div id="donate">
+        <DonationSection />
+      </div>
+      
+      {/* Financial Sections broken down for Navigation targets */}
+      <div id="summary">
+          <StatsCards summary={summary} />
+      </div>
+
+      <div id="breakdown">
+          <ExpenseBreakdown transactions={transactions} />
+      </div>
+
+      <div id="transparency">
+          <TransactionTable transactions={transactions} />
+      </div>
     </div>
   );
 };

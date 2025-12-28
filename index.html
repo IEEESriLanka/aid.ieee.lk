@@ -4,133 +4,34 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="referrer" content="strict-origin-when-cross-origin" />
-    <title>IEEE Sri Lanka Section - Disaster Relief Initiative</title>
+    <title>IEEE Sri Lanka Section — Disaster Relief Fund: Transparency & Utilization Report</title>
     
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-      tailwind.config = {
-        darkMode: 'class',
-        theme: {
-          extend: {
-            fontFamily: {
-              sans: ['Poppins', 'system-ui', 'sans-serif'],
-              heading: ['Poppins', 'sans-serif'],
-            }
-          }
-        }
-      }
-    </script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="icon" type="image/png" href="/logo.ico" />
-    
-    <link rel="stylesheet" href="/index.css">
 
-    <style>
-      :root {
-        --font-sans: 'Poppins', system-ui, -apple-system, sans-serif;
-        --font-heading: 'Poppins', sans-serif;
-        --ieee-blue: #00629B;
+    <script type="importmap">
+    {
+      "imports": {
+        "url": "https://esm.sh/url@^0.11.4",
+        "react/": "https://esm.sh/react@^19.2.3/",
+        "react": "https://esm.sh/react@^19.2.3",
+        "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+        "lucide-react": "https://esm.sh/lucide-react@^0.562.0",
+        "react-router-dom": "https://esm.sh/react-router-dom@^7.11.0",
+        "path": "https://esm.sh/path@^0.12.7",
+        "vite": "https://esm.sh/vite@^7.3.0",
+        "@vitejs/plugin-react": "https://esm.sh/@vitejs/plugin-react@^5.1.2",
+        "@vercel/analytics/": "https://esm.sh/@vercel/analytics@^1.6.1/",
+        "@vercel/speed-insights/": "https://esm.sh/@vercel/speed-insights@^1.3.1/",
+        "papaparse": "https://esm.sh/papaparse@^5.5.3",
+        "recharts": "https://esm.sh/recharts@^3.6.0",
+        "d3-geo": "https://esm.sh/d3-geo@^3.1.0"
       }
-      
-      body { 
-        font-family: var(--font-sans); 
-        background-color: #f8fafc; 
-        overflow-x: hidden; 
-        -webkit-font-smoothing: antialiased;
-        -moz-osx-font-smoothing: grayscale;
-      }
-      
-      /* Dark mode body transition */
-      body.dark {
-        background-color: #020617;
-        color: #f8fafc;
-      }
-      
-      h1, h2, h3, h4, h5, h6, .font-heading {
-        font-family: var(--font-heading);
-      }
-      
-      /* Scrollbar & Animations */
-      .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-      
-      .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #334155; }
-      .dark .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #475569; }
-      
-      .reveal { opacity: 0; transform: translateY(30px); transition: all 1s cubic-bezier(0.5, 0, 0, 1); }
-      .reveal.active { opacity: 1; transform: translateY(0); }
-      
-      /* New Animation for dynamic content (View More) that doesn't rely on scroll observer */
-      @keyframes appear {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-      }
-      .animate-appear {
-        animation: appear 0.6s cubic-bezier(0.5, 0, 0, 1) forwards;
-      }
-      
-      .will-change-transform { will-change: transform; }
-      
-      .delay-100 { transition-delay: 100ms; }
-      .delay-200 { transition-delay: 200ms; }
-      .delay-300 { transition-delay: 300ms; }
-      
-      /* Background Line Art Animations */
-      @keyframes drift {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-      }
-      
-      @keyframes float {
-        0% { transform: translateY(0px); }
-        50% { transform: translateY(-20px); }
-        100% { transform: translateY(0px); }
-      }
-
-      .animate-drift-slow {
-        animation: drift 60s linear infinite;
-        will-change: transform;
-      }
-      
-      .animate-drift-medium {
-        animation: drift 40s linear infinite;
-        will-change: transform;
-      }
-
-      .animate-float {
-        animation: float 10s ease-in-out infinite;
-        will-change: transform;
-      }
-      
-      .animate-pulse-slow {
-        animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-        will-change: transform;
-      }
-      
-      /* Heartbeat Animation for Donate Button */
-      @keyframes heartbeat {
-        0% { transform: scale(1); }
-        14% { transform: scale(1.05); } 
-        28% { transform: scale(1); }
-        42% { transform: scale(1.05); } 
-        70% { transform: scale(1); }
-        100% { transform: scale(1); }
-      }
-      
-      .animate-heartbeat {
-        animation: heartbeat 3s infinite cubic-bezier(0.4, 0, 0.2, 1);
-        will-change: transform;
-        transform-origin: center;
-      }
-
-      @keyframes shine { from { left: -100%; } to { left: 200%; } }
-      .animate-shine { animation: shine 3s infinite linear; }
-    </style>
-
+    }
+    </script>
+  <link rel="stylesheet" href="/index.css">
 </head>
   <body>
     <div id="root"></div>
