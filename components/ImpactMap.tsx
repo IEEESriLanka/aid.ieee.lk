@@ -119,22 +119,24 @@ export const ImpactMap: React.FC<ImpactMapProps> = ({ stories, className = "" })
                   onMouseLeave={() => setHoveredStory(null)}
                   onClick={() => navigate(`/impact/${story.slug}`)}
                 >
+                  {/* Subtle Radar Ripple Effect (Small Size) */}
                   <circle
                     cx={(story as any).cx}
                     cy={(story as any).cy}
-                    r={12}
-                    className="fill-[#00629B] animate-ping opacity-75 origin-center"
+                    r={3}
+                    className="fill-[#00629B] animate-ping opacity-20 origin-center pointer-events-none"
                     style={{ animationDuration: "2.5s" }}
                   />
 
+                  {/* Main Pin Point */}
                   <circle
                     cx={(story as any).cx}
                     cy={(story as any).cy}
-                    r={isHovered ? 8 : 5}
-                    className={`transition-all duration-300 drop-shadow-md ${
+                    r={isHovered ? 8 : 4}
+                    className={`transition-all duration-300 drop-shadow-sm ${
                       isHovered
                         ? "fill-[#00629B] dark:fill-blue-400 stroke-white dark:stroke-slate-900 stroke-2"
-                        : "fill-red-500 stroke-white stroke-1"
+                        : "fill-[#00629B] stroke-white stroke-[1.5px]"
                     }`}
                   />
 
