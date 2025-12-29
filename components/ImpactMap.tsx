@@ -9,9 +9,10 @@ import lkGeo from "@/data/lk.json";
 
 interface ImpactMapProps {
   stories: ImpactStory[];
+  className?: string;
 }
 
-export const ImpactMap: React.FC<ImpactMapProps> = ({ stories }) => {
+export const ImpactMap: React.FC<ImpactMapProps> = ({ stories, className = "" }) => {
   const navigate = useNavigate();
   const [hoveredStory, setHoveredStory] = useState<ImpactStory | null>(null);
 
@@ -85,14 +86,15 @@ export const ImpactMap: React.FC<ImpactMapProps> = ({ stories }) => {
   }, [stories, projection]);
 
   return (
-    <div className="w-full h-full relative flex flex-col items-center justify-center min-h-[600px] p-4 md:p-8">
+    <div className={`w-full h-full relative flex flex-col items-center justify-center p-4 ${className}`}>
       <div className="relative w-full h-full flex items-center justify-center">
-        <div className="w-full max-w-[450px]">
+        <div className="w-full h-full flex items-center justify-center">
           <svg
             viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
-            className="w-full h-auto drop-shadow-2xl overflow-visible"
+            className="max-h-full w-auto drop-shadow-2xl overflow-visible"
             style={{ filter: "drop-shadow(0px 10px 20px rgba(0,0,0,0.15))" }}
             xmlns="http://www.w3.org/2000/svg"
+            preserveAspectRatio="xMidYMid meet"
           >
             {/* MAP LAYER */}
             <g className="fill-white dark:fill-slate-800 stroke-gray-300 dark:stroke-slate-600 stroke-[1]">
@@ -157,7 +159,7 @@ export const ImpactMap: React.FC<ImpactMapProps> = ({ stories }) => {
 
         {/* Bottom detail card */}
         {hoveredStory && (
-          <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 dark:border-slate-700 p-4 z-30 pointer-events-none">
+          <div className="absolute bottom-4 left-4 right-4 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md rounded-xl shadow-2xl border border-gray-100 dark:border-slate-700 p-4 z-30 pointer-events-none animate-in slide-in-from-bottom-2 fade-in">
             <div className="flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2 mb-1 text-[10px] font-bold text-[#00629B] dark:text-blue-400 uppercase tracking-widest">
