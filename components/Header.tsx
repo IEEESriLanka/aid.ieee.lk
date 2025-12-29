@@ -154,7 +154,7 @@ export const Hero: React.FC = () => {
     return (
         <section className="relative pt-40 pb-20 lg:pt-56 lg:pb-36 overflow-hidden">
              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
-                 <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50/80 dark:bg-blue-900/30 text-[#00629B] dark:text-blue-400 text-[10px] sm:text-xs font-extrabold mb-10 border border-blue-100 dark:border-blue-800 uppercase tracking-widest animate-in fade-in slide-in-from-bottom-4 duration-700 backdrop-blur-sm">
+                 <div className="inline-flex items-center px-4 py-1.5 rounded-full bg-blue-50/80 dark:bg-blue-900/30 text-[#00629B] dark:text-blue-400 text-[10px] sm:text-xs font-extrabold mb-10 border border-blue-100 dark:border-blue-800 uppercase tracking-widest animate-appear backdrop-blur-sm">
                      <span className="relative flex h-2 w-2 mr-3">
                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
                        <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00629B]"></span>
@@ -162,15 +162,15 @@ export const Hero: React.FC = () => {
                      Live Transparency Report
                  </div>
                  
-                 <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-[#0B1120] dark:text-white tracking-tighter mb-8 font-heading animate-in fade-in slide-in-from-bottom-8 duration-700 delay-100 leading-tight max-w-5xl mx-auto">
+                 <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-[#0B1120] dark:text-white tracking-tighter mb-8 font-heading animate-slide-up-fast leading-[1.1] max-w-5xl mx-auto">
                     Rebuilding with <span className="text-[#00629B]">Integrity</span>
                  </h1>
                  
-                 <p className="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-gray-600 dark:text-gray-300 leading-relaxed mb-12 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-200">
+                 <p className="mt-4 max-w-3xl mx-auto text-lg md:text-xl text-gray-600 dark:text-gray-300 leading-relaxed mb-12 animate-slide-up-fast delay-100">
                     In response to Cyclone Ditwah, IEEE Sri Lanka Section is dedicated to full financial transparency. Every donation is tracked, every expense is verified, and every outcome is reported here.
                  </p>
                  
-                 <div className="flex flex-col sm:flex-row gap-5 justify-center items-center animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+                 <div className="flex flex-col sm:flex-row gap-5 justify-center items-center animate-slide-up-fast delay-200">
                     <Link 
                         to="/donate" 
                         className="px-10 py-4 bg-[#00629B] text-white rounded-full font-bold text-lg shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 hover:bg-gradient-to-r hover:from-cyan-400 hover:to-[#00629B] w-full sm:w-auto flex items-center justify-center group"
