@@ -6,7 +6,9 @@ import { StatsCards } from '@/components/StatsCards';
 import { ExpenseBreakdown } from '@/components/Charts';
 import { TransactionTable } from '@/components/TransactionTable';
 import { HomeNavigation } from '@/components/HomeNavigation';
+import { ImpactMap } from '@/components/ImpactMap';
 import { ImpactStory, Transaction, FinancialSummary } from '@/types';
+import { MapPin, Activity } from 'lucide-react';
 
 interface HomeProps {
   stories: ImpactStory[];
@@ -40,18 +42,83 @@ export const Home: React.FC<HomeProps> = ({ stories, transactions, summary }) =>
       <div id="hero">
         <Hero />
       </div>
+
+      {/* Interactive Map Section - Beautifully Blended */}
+      <section className="py-12 md:py-20 relative z-10">
+         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl rounded-[2.5rem] shadow-2xl shadow-blue-900/5 dark:shadow-black/20 border border-white/20 dark:border-slate-700/50 overflow-hidden relative group">
+                
+                {/* Ambient Background Glow */}
+                <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-blue-400/5 dark:bg-blue-600/5 rounded-full blur-[100px] -translate-y-1/2 translate-x-1/3 pointer-events-none"></div>
+                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-400/5 dark:bg-indigo-600/5 rounded-full blur-[100px] translate-y-1/3 -translate-x-1/3 pointer-events-none"></div>
+
+                <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center p-8 lg:p-12 relative z-10">
+                    
+                    {/* Text Content */}
+                    <div className="lg:col-span-5 flex flex-col justify-center">
+                        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-50 dark:bg-blue-900/20 text-[#00629B] dark:text-blue-300 text-xs font-bold uppercase tracking-widest mb-8 w-fit border border-blue-100 dark:border-blue-800/50">
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00629B]"></span>
+                            </span>
+                            Live Operations
+                        </div>
+                        
+                        <h2 className="text-3xl md:text-4xl lg:text-5xl font-extrabold text-gray-900 dark:text-white font-heading leading-tight mb-6">
+                            Impact Across the Island
+                        </h2>
+                        
+                        <p className="text-gray-600 dark:text-gray-400 text-lg leading-relaxed mb-10 font-light">
+                            We believe in radical transparency. Explore our interactive operations map to see exactly where aid is being delivered, from coastal relief centers to inland distribution points.
+                        </p>
+
+                        <div className="flex flex-wrap gap-6">
+                            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-gray-100 dark:border-slate-700">
+                                <div className="p-2 bg-blue-50 dark:bg-blue-900/30 rounded-full">
+                                    <MapPin className="w-5 h-5 text-[#00629B] dark:text-blue-400" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white leading-none">{stories.length}</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Locations</p>
+                                </div>
+                            </div>
+                            
+                            <div className="flex items-center gap-3 px-5 py-3 rounded-2xl bg-white dark:bg-slate-800 shadow-sm border border-gray-100 dark:border-slate-700">
+                                <div className="p-2 bg-green-50 dark:bg-green-900/30 rounded-full">
+                                    <Activity className="w-5 h-5 text-green-600 dark:text-green-400" />
+                                </div>
+                                <div>
+                                    <p className="text-2xl font-bold text-gray-900 dark:text-white leading-none">Active</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mt-1">Status</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Map Visualization */}
+                    <div className="lg:col-span-7 relative w-full flex items-center justify-center">
+                         <div className="relative w-full h-[500px] lg:h-[600px] bg-white/40 dark:bg-slate-800/40 rounded-[2rem] border border-white/50 dark:border-slate-700/50 shadow-inner flex items-center justify-center overflow-hidden group-hover:bg-white/60 dark:group-hover:bg-slate-800/60 transition-colors duration-500">
+                            {/* Inner glow for map container */}
+                            <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-blue-50/30 dark:to-blue-900/10 pointer-events-none"></div>
+                            
+                            <div className="w-full h-full transform group-hover:scale-105 transition-transform duration-700 ease-out origin-center p-4">
+                                <ImpactMap stories={stories} />
+                            </div>
+                         </div>
+                    </div>
+                </div>
+            </div>
+         </div>
+      </section>
       
       {/* ImpactFeed has internal id="impact" */}
       <ImpactFeed stories={stories} />
       
-      <div id="donate">
-        <DonationSection />
-      </div>
+      {/* DonationSection has internal id="donate" */}
+      <DonationSection />
       
-      {/* Financial Sections broken down for Navigation targets */}
-      <div id="summary">
-          <StatsCards summary={summary} />
-      </div>
+      {/* StatsCards has internal id="summary" */}
+      <StatsCards summary={summary} />
 
       <div id="breakdown">
           <ExpenseBreakdown transactions={transactions} />
